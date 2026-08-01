@@ -1,0 +1,2291 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>RabbitHollow: Dark Hunt</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Creepster&family=MedievalSharp&display=swap');
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #1a1a2e;
+      color: #e8e0d4;
+      font-family: 'MedievalSharp', cursive, serif;
+      touch-action: none;
+    }
+
+    /* ===== MAIN MENU ===== */
+    #mainMenu {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #1a1a2e;
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+      background-image: radial-gradient(ellipse at center, rgba(255,200,100,0.05) 0%, transparent 70%);
+    }
+
+    #mainMenu.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    #mainMenu .logo {
+      font-family: 'Creepster', cursive;
+      font-size: clamp(48px, 12vw, 110px);
+      color: #f5c842;
+      text-shadow: 0 0 80px rgba(245,200,66,0.15), 0 4px 40px rgba(0,0,0,0.9);
+      letter-spacing: 6px;
+      margin-bottom: 2px;
+      position: relative;
+    }
+
+    #mainMenu .logo::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #f5c842, transparent);
+    }
+
+    #mainMenu .subtitle {
+      font-size: clamp(14px, 3vw, 28px);
+      color: #8a8a9a;
+      letter-spacing: 10px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      font-family: 'MedievalSharp', cursive;
+      margin-top: 12px;
+    }
+
+    #mainMenu .subtitle span { color: #f5c842; }
+
+    .menu-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: min(300px, 80vw);
+    }
+
+    .menu-btn {
+      padding: 14px 24px;
+      font-size: 18px;
+      font-family: 'MedievalSharp', cursive;
+      background: rgba(255,255,255,0.04);
+      border: 2px solid rgba(255,200,100,0.15);
+      border-radius: 12px;
+      color: #e8e0d4;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      text-align: center;
+      letter-spacing: 2px;
+      position: relative;
+      backdrop-filter: blur(4px);
+      font-weight: 700;
+    }
+
+    .menu-btn:hover {
+      background: rgba(255,200,100,0.08);
+      border-color: #f5c842;
+      box-shadow: 0 0 40px rgba(245,200,66,0.06);
+      transform: scale(1.02);
+    }
+
+    .menu-btn:active { transform: scale(0.97); }
+
+    .menu-btn.primary {
+      border-color: #f5c842;
+      background: rgba(245,200,66,0.06);
+      color: #f5c842;
+    }
+
+    .menu-btn.primary:hover {
+      background: rgba(245,200,66,0.12);
+      box-shadow: 0 0 50px rgba(245,200,66,0.08);
+    }
+
+    .menu-btn .badge {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 11px;
+      color: #8a8a9a;
+      background: rgba(0,0,0,0.4);
+      padding: 2px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .menu-btn .badge.locked {
+      color: #e86868;
+      border-color: rgba(232,104,104,0.2);
+    }
+
+    .menu-btn .badge.unlocked {
+      color: #f5c842;
+      border-color: rgba(245,200,66,0.2);
+    }
+
+    .menu-divider {
+      width: 60px;
+      height: 2px;
+      background: rgba(255,200,100,0.08);
+      margin: 6px auto;
+      border-radius: 2px;
+    }
+
+    /* ===== CHARACTER CREATION ===== */
+    #charCreation {
+      position: fixed;
+      inset: 0;
+      z-index: 10001;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(26, 26, 46, 0.97);
+      backdrop-filter: blur(20px);
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+      padding: 20px;
+    }
+
+    #charCreation.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    #charCreation .title {
+      font-family: 'Creepster', cursive;
+      font-size: clamp(28px, 6vw, 56px);
+      color: #f5c842;
+      text-shadow: 0 0 40px rgba(245,200,66,0.1);
+      margin-bottom: 8px;
+      letter-spacing: 4px;
+    }
+
+    #charCreation .sub {
+      color: #8a8a9a;
+      font-size: clamp(13px, 2vw, 18px);
+      margin-bottom: 30px;
+      letter-spacing: 3px;
+    }
+
+    .char-form {
+      width: min(420px, 90vw);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .char-form label {
+      font-size: 14px;
+      color: #8a8a9a;
+      letter-spacing: 2px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .char-form input, .char-form select {
+      padding: 14px 18px;
+      background: rgba(255,255,255,0.04);
+      border: 2px solid rgba(255,200,100,0.1);
+      border-radius: 10px;
+      color: #e8e0d4;
+      font-size: 16px;
+      font-family: 'MedievalSharp', cursive;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .char-form input:focus, .char-form select:focus {
+      border-color: #f5c842;
+    }
+
+    .char-form input::placeholder {
+      color: rgba(255,255,255,0.1);
+    }
+
+    .char-form select option {
+      background: #1a1a2e;
+      color: #e8e0d4;
+    }
+
+    .char-form .stat-preview {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      padding: 14px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 10px;
+      border: 1px solid rgba(255,200,100,0.05);
+    }
+
+    .char-form .stat-preview span {
+      font-size: 14px;
+      color: #8a8a9a;
+    }
+
+    .char-form .stat-preview span b {
+      color: #f5c842;
+      float: right;
+    }
+
+    .char-form .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .char-form .actions button {
+      flex: 1;
+      padding: 14px;
+      font-size: 16px;
+      font-family: 'MedievalSharp', cursive;
+      border-radius: 10px;
+      border: 2px solid rgba(255,200,100,0.1);
+      background: rgba(255,255,255,0.04);
+      color: #e8e0d4;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .char-form .actions button:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: #f5c842;
+    }
+
+    .char-form .actions button.primary {
+      background: rgba(245,200,66,0.08);
+      border-color: #f5c842;
+      color: #f5c842;
+    }
+
+    .char-form .actions button.primary:hover {
+      background: rgba(245,200,66,0.15);
+      box-shadow: 0 0 30px rgba(245,200,66,0.05);
+    }
+
+    /* ===== GAME APP ===== */
+    #app {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      background: #1a1a2e;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+
+    #app.visible { opacity: 1; }
+
+    #gameCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      background: #2a3a3a;
+    }
+
+    button {
+      border: 2px solid rgba(255,200,100,0.12);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.04);
+      color: #e8e0d4;
+      font: inherit;
+      cursor: pointer;
+      user-select: none;
+      touch-action: manipulation;
+      transition: all 0.15s;
+      font-family: 'MedievalSharp', cursive;
+    }
+
+    button:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: #f5c842;
+      box-shadow: 0 0 20px rgba(245,200,66,0.05);
+    }
+
+    button:active { transform: scale(.95); }
+
+    #hud {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .top-left {
+      position: absolute;
+      top: max(10px, env(safe-area-inset-top));
+      left: max(10px, env(safe-area-inset-left));
+      width: min(320px, calc(100vw - 80px));
+      pointer-events: auto;
+    }
+
+    .player-card {
+      padding: 10px 14px;
+      border: 2px solid rgba(255,200,100,0.08);
+      border-radius: 14px;
+      background: rgba(26, 26, 46, 0.85);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 40px rgba(0,0,0,0.3);
+    }
+
+    .name-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #f5c842;
+    }
+
+    .level-badge {
+      padding: 2px 12px;
+      border: 1px solid #f5c842;
+      border-radius: 999px;
+      background: rgba(245,200,66,0.06);
+      color: #f5c842;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .bar {
+      height: 8px;
+      margin-top: 5px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+
+    .bar > i {
+      display: block;
+      height: 100%;
+      transition: width 0.15s ease;
+      border-radius: 999px;
+    }
+
+    #hpFill {
+      background: linear-gradient(90deg, #e86868, #ff6b6b);
+      box-shadow: 0 0 15px rgba(232,104,104,0.2);
+    }
+    #manaFill {
+      background: linear-gradient(90deg, #6b7bd8, #8b9dff);
+      box-shadow: 0 0 15px rgba(107,123,216,0.2);
+    }
+    #xpFill {
+      background: linear-gradient(90deg, #d4a030, #f5c842);
+      box-shadow: 0 0 15px rgba(245,200,66,0.2);
+    }
+
+    .bar-label {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 3px;
+      color: #8a8a9a;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+    }
+
+    .top-right {
+      position: absolute;
+      top: max(10px, env(safe-area-inset-top));
+      right: max(10px, env(safe-area-inset-right));
+      display: flex;
+      gap: 6px;
+      pointer-events: auto;
+    }
+
+    .icon-button {
+      width: 42px;
+      height: 42px;
+      font-size: 18px;
+      background: rgba(26, 26, 46, 0.85);
+      backdrop-filter: blur(10px);
+      border-color: rgba(255,200,100,0.08);
+    }
+
+    #skills {
+      position: absolute;
+      left: 50%;
+      bottom: max(16px, env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 2px solid rgba(255,200,100,0.06);
+      border-radius: 14px;
+      background: rgba(26, 26, 46, 0.85);
+      backdrop-filter: blur(12px);
+      pointer-events: auto;
+    }
+
+    .skill {
+      position: relative;
+      width: 56px;
+      height: 56px;
+      overflow: hidden;
+      font-weight: 700;
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(255,200,100,0.08);
+      font-size: 13px;
+      font-family: 'MedievalSharp', cursive;
+      border-radius: 10px;
+    }
+
+    .skill small {
+      position: absolute;
+      left: 4px;
+      bottom: 3px;
+      color: #8a8a9a;
+      font-size: 9px;
+    }
+
+    .skill .cooldown {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: rgba(0,0,0,0.7);
+      font-size: 18px;
+      color: #f5c842;
+      font-weight: 900;
+      border-radius: 10px;
+    }
+
+    .skill.locked {
+      filter: grayscale(1) brightness(0.4);
+      opacity: .4;
+    }
+
+    #combatLog {
+      position: absolute;
+      left: max(10px, env(safe-area-inset-left));
+      bottom: max(85px, calc(env(safe-area-inset-bottom) + 65px));
+      width: min(320px, calc(100vw - 20px));
+      color: rgba(200, 200, 200, 0.6);
+      font-size: 13px;
+      pointer-events: none;
+      text-shadow: 0 2px 8px #000;
+      font-family: 'MedievalSharp', cursive;
+      line-height: 1.5;
+    }
+
+    .log-line {
+      margin-top: 2px;
+      padding-left: 8px;
+      border-left: 2px solid rgba(245,200,66,0.15);
+    }
+
+    #mobileControls {
+      display: none;
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    #joystick {
+      position: absolute;
+      left: max(16px, env(safe-area-inset-left));
+      bottom: max(16px, env(safe-area-inset-bottom));
+      width: 110px;
+      height: 110px;
+      border: 2px solid rgba(255,200,100,0.1);
+      border-radius: 50%;
+      background: rgba(0,0,0,0.3);
+      pointer-events: auto;
+      backdrop-filter: blur(4px);
+    }
+
+    #stick {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 48px;
+      height: 48px;
+      transform: translate(-50%, -50%);
+      border: 2px solid rgba(255,200,100,0.15);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,200,100,0.15), rgba(0,0,0,0.4));
+    }
+
+    #attackButton {
+      position: absolute;
+      right: max(18px, env(safe-area-inset-right));
+      bottom: max(22px, env(safe-area-inset-bottom));
+      width: 82px;
+      height: 82px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(232,104,104,0.3), rgba(232,104,104,0.1));
+      border: 2px solid rgba(232,104,104,0.2);
+      font-size: 13px;
+      font-weight: 900;
+      pointer-events: auto;
+      color: #ff8a8a;
+    }
+
+    #mobileSkillButtons {
+      position: absolute;
+      right: max(16px, env(safe-area-inset-right));
+      bottom: max(120px, calc(env(safe-area-inset-bottom) + 100px));
+      display: grid;
+      grid-template-columns: repeat(2, 48px);
+      gap: 6px;
+      pointer-events: auto;
+    }
+
+    #mobileSkillButtons button {
+      width: 48px;
+      height: 48px;
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(255,200,100,0.08);
+      font-family: 'MedievalSharp', cursive;
+      border-radius: 10px;
+    }
+
+    .panel {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: min(880px, calc(100vw - 20px));
+      max-height: min(700px, calc(100vh - 20px));
+      transform: translate(-50%, -50%);
+      overflow: auto;
+      padding: 20px;
+      border: 2px solid rgba(255,200,100,0.06);
+      border-radius: 16px;
+      background: rgba(26, 26, 46, 0.95);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 80px rgba(0,0,0,0.8);
+      z-index: 20;
+    }
+
+    .panel.hidden { display: none; }
+
+    .panel::-webkit-scrollbar {
+      width: 4px;
+      background: transparent;
+    }
+    .panel::-webkit-scrollbar-thumb {
+      background: #f5c842;
+      border-radius: 4px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid rgba(255,200,100,0.06);
+      padding-bottom: 10px;
+    }
+
+    .panel-header h2 {
+      margin: 0;
+      font-size: 24px;
+      font-family: 'Creepster', cursive;
+      letter-spacing: 2px;
+      color: #f5c842;
+    }
+
+    .close {
+      width: 38px;
+      height: 38px;
+      font-size: 18px;
+      border-color: rgba(255,200,100,0.08);
+    }
+
+    .panel-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .section {
+      padding: 14px;
+      border: 1px solid rgba(255,200,100,0.05);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .section h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+      color: #f5c842;
+      letter-spacing: 1px;
+      font-family: 'Creepster', cursive;
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+
+    .stat-row:last-child { border-bottom: 0; }
+
+    .stat-row button {
+      width: 30px;
+      height: 30px;
+      font-size: 16px;
+      background: rgba(245,200,66,0.04);
+      border-color: rgba(245,200,66,0.08);
+    }
+
+    .stat-value {
+      min-width: 32px;
+      text-align: right;
+      font-weight: 700;
+      color: #e8e0d4;
+    }
+
+    .item {
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      border: 1px solid rgba(255,200,100,0.05);
+      border-radius: 10px;
+      background: rgba(0,0,0,0.2);
+    }
+
+    .item-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .item-meta {
+      margin-top: 4px;
+      color: #8a8a9a;
+      font-size: 12px;
+    }
+
+    .rarity-common { color: #a0a0a0; }
+    .rarity-uncommon { color: #5bc85b; }
+    .rarity-rare { color: #5b9dff; }
+    .rarity-epic { color: #c084fc; }
+    .rarity-legendary { color: #ff8c00; }
+
+    .item button {
+      margin-top: 6px;
+      padding: 4px 12px;
+      font-size: 12px;
+      background: rgba(245,200,66,0.04);
+      border-color: rgba(245,200,66,0.08);
+    }
+
+    .menu-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .menu-actions button {
+      padding: 8px 16px;
+      background: rgba(245,200,66,0.04);
+      border-color: rgba(245,200,66,0.08);
+    }
+
+    #levelUp {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      z-index: 30;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    #levelUp.show {
+      animation: levelUp 1.8s ease forwards;
+    }
+
+    #levelUpText {
+      padding: 24px 40px;
+      border: 2px solid rgba(245,200,66,0.3);
+      border-radius: 16px;
+      background: rgba(26, 26, 46, 0.9);
+      color: #f5c842;
+      font-size: clamp(32px, 8vw, 72px);
+      font-weight: 700;
+      letter-spacing: 4px;
+      text-shadow: 0 0 40px rgba(245,200,66,0.15);
+      font-family: 'Creepster', cursive;
+    }
+
+    @keyframes levelUp {
+      0% { opacity: 0; transform: scale(0.5); }
+      18% { opacity: 1; transform: scale(1.05); }
+      45% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1.1); }
+    }
+
+    #toast {
+      position: absolute;
+      top: 75px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      padding: 8px 18px;
+      border: 1px solid rgba(255,200,100,0.08);
+      border-radius: 10px;
+      background: rgba(26, 26, 46, 0.9);
+      opacity: 0;
+      pointer-events: none;
+      transition: .2s ease;
+      z-index: 40;
+      font-size: 14px;
+      text-align: center;
+      font-family: 'MedievalSharp', cursive;
+      backdrop-filter: blur(10px);
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (pointer: coarse) {
+      #mobileControls { display: block; }
+      #skills { display: none; }
+      #combatLog { bottom: max(135px, calc(env(safe-area-inset-bottom) + 115px)); }
+      .top-right { top: max(10px, env(safe-area-inset-top)); }
+    }
+
+    @media (max-width: 650px) {
+      .panel { padding: 14px; border-radius: 12px; }
+      .panel-grid { grid-template-columns: 1fr; }
+      .top-left { width: min(260px, calc(100vw - 80px)); }
+      .player-card { padding: 8px 12px; }
+      .name-row { font-size: 16px; }
+    }
+
+    @media (orientation: landscape) and (max-height: 520px) {
+      .top-left { top: 6px; }
+      #joystick { width: 88px; height: 88px; }
+      #stick { width: 40px; height: 40px; }
+      #attackButton { width: 64px; height: 64px; font-size: 11px; }
+      #mobileSkillButtons { bottom: 80px; }
+      #mobileSkillButtons button { width: 40px; height: 40px; font-size: 10px; }
+      #combatLog { bottom: 10px; left: 120px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== MAIN MENU ===== -->
+  <div id="mainMenu">
+    <div class="logo">RABBITHOLLOW</div>
+    <div class="subtitle">CODE . <span>CREATE</span> . ESCAPE</div>
+
+    <div class="menu-buttons">
+      <button class="menu-btn primary" id="newGameBtn">⚔️ NEW GAME</button>
+      <button class="menu-btn" id="continueBtn">📜 CONTINUE <span class="badge" id="continueBadge">—</span></button>
+      <div class="menu-divider"></div>
+      <button class="menu-btn" id="fullGameBtn" style="opacity:0.6;">
+        🎮 FULL GAME <span class="badge locked">🔒 200 CZK</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== CHARACTER CREATION ===== -->
+  <div id="charCreation" class="hidden">
+    <div class="title">⚔️ CREATE HUNTER</div>
+    <div class="sub">Choose your name and class</div>
+
+    <div class="char-form">
+      <label>
+        NAME
+        <input type="text" id="charName" placeholder="Enter your name..." value="Dark Hunter" maxlength="20">
+      </label>
+
+      <label>
+        CLASS
+        <select id="charClass">
+          <option value="warrior">⚔️ Warrior — Strength +2</option>
+          <option value="rogue">🗡️ Rogue — Agility +2</option>
+          <option value="mage">🔮 Mage — Intelligence +2</option>
+          <option value="paladin">🛡️ Paladin — Vitality +2</option>
+        </select>
+      </label>
+
+      <div class="stat-preview">
+        <span>💪 Strength: <b id="previewStr">5</b></span>
+        <span>🏃 Agility: <b id="previewAgi">5</b></span>
+        <span>🛡️ Vitality: <b id="previewVit">5</b></span>
+        <span>🧠 Intelligence: <b id="previewInt">5</b></span>
+      </div>
+
+      <div class="actions">
+        <button id="charBackBtn">← BACK</button>
+        <button class="primary" id="charStartBtn">⚔️ START HUNT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== GAME ===== -->
+  <div id="app">
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="hud">
+      <div class="top-left">
+        <div class="player-card">
+          <div class="name-row">
+            <span id="playerNameDisplay">⚔️ Dark Hunter</span>
+            <span class="level-badge" id="levelText">LVL 1</span>
+          </div>
+          <div class="bar"><i id="hpFill"></i></div>
+          <div class="bar-label"><span>❤️ HP</span><span id="hpText">100 / 100</span></div>
+          <div class="bar"><i id="manaFill"></i></div>
+          <div class="bar-label"><span>🔮 Mana</span><span id="manaText">50 / 50</span></div>
+          <div class="bar"><i id="xpFill"></i></div>
+          <div class="bar-label"><span>⭐ XP</span><span id="xpText">0 / 100</span></div>
+        </div>
+      </div>
+
+      <div class="top-right">
+        <button class="icon-button" id="statsButton">📊</button>
+        <button class="icon-button" id="inventoryButton">🎒</button>
+        <button class="icon-button" id="menuButton">☰</button>
+      </div>
+
+      <div id="skills">
+        <button class="skill" data-skill="0">⚔️<small>1</small></button>
+        <button class="skill" data-skill="1">🌀<small>2</small></button>
+        <button class="skill" data-skill="2">💨<small>3</small></button>
+        <button class="skill" data-skill="3">🔥<small>4</small></button>
+        <button class="skill" data-skill="4">💀<small>5</small></button>
+      </div>
+
+      <div id="mobileControls">
+        <div id="joystick"><div id="stick"></div></div>
+        <button id="attackButton">⚔️<br>ÚTOK</button>
+        <div id="mobileSkillButtons">
+          <button data-skill="0">⚔️</button>
+          <button data-skill="1">🌀</button>
+          <button data-skill="2">💨</button>
+          <button data-skill="3">🔥</button>
+          <button data-skill="4">💀</button>
+        </div>
+      </div>
+
+      <div id="combatLog"></div>
+      <div id="toast"></div>
+
+      <div id="levelUp"><div id="levelUpText">⬆ LEVEL UP!</div></div>
+
+      <div class="panel hidden" id="statsPanel">
+        <div class="panel-header">
+          <h2>📊 STATS</h2>
+          <button class="close" data-close="statsPanel">✕</button>
+        </div>
+        <div class="panel-grid">
+          <div class="section">
+            <h3>Attributes</h3>
+            <div class="stat-row"><span>💪 Strength</span><span><button data-stat="strength">+</button><b class="stat-value" id="strengthValue">5</b></span></div>
+            <div class="stat-row"><span>🏃 Agility</span><span><button data-stat="agility">+</button><b class="stat-value" id="agilityValue">5</b></span></div>
+            <div class="stat-row"><span>🛡️ Vitality</span><span><button data-stat="vitality">+</button><b class="stat-value" id="vitalityValue">5</b></span></div>
+            <div class="stat-row"><span>🧠 Intelligence</span><span><button data-stat="intelligence">+</button><b class="stat-value" id="intelligenceValue">5</b></span></div>
+            <p style="color:#f5c842;margin-top:8px;">Free points: <b id="statPointsValue">0</b></p>
+          </div>
+          <div class="section">
+            <h3>Combat</h3>
+            <div class="stat-row"><span>⚔️ Damage</span><b id="damageValue">10</b></div>
+            <div class="stat-row"><span>❤️ Max HP</span><b id="maxHpValue">100</b></div>
+            <div class="stat-row"><span>🔮 Max Mana</span><b id="maxManaValue">50</b></div>
+            <div class="stat-row"><span>🗡️ Attack Speed</span><b id="attackSpeedValue">1.0/s</b></div>
+            <div class="stat-row"><span>💀 Critical</span><b id="critValue">5%</b></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel hidden" id="inventoryPanel">
+        <div class="panel-header">
+          <h2>🎒 INVENTORY</h2>
+          <button class="close" data-close="inventoryPanel">✕</button>
+        </div>
+        <div class="panel-grid">
+          <div class="section">
+            <h3>⚔️ Equipment</h3>
+            <div id="equipmentList"></div>
+          </div>
+          <div class="section">
+            <h3>📦 Loot</h3>
+            <div id="inventoryList"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel hidden" id="menuPanel">
+        <div class="panel-header">
+          <h2>☰ MENU</h2>
+          <button class="close" data-close="menuPanel">✕</button>
+        </div>
+        <div class="section">
+          <h3>🐇 RabbitHollow: Dark Hunt</h3>
+          <p style="color:#8a8a9a;">Slay creatures, collect cursed loot, ascend.</p>
+          <p style="color:#8a8a9a;font-size:13px;">WASD / Arrows + Mouse · Mobile: Joystick + Touch</p>
+          <div class="menu-actions">
+            <button id="saveButton">💾 Save</button>
+            <button id="resetButton">♻️ Reset</button>
+            <button id="menuBackBtn">🏠 Main Menu</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+
+    // ============================================================
+    //  KAION TALE STYLE - Colorful Pixel Art MMORPG
+    //  Vibrant colors, detailed sprites, charming environments
+    // ============================================================
+
+    // ---- PLAYER SPRITES (12x12 for more detail) ----
+    const PLAYER_SPRITES = {
+      warrior: [
+        ['transparent','transparent','#3d2b1f','#3d2b1f','#3d2b1f','#3d2b1f','#3d2b1f','#3d2b1f','#3d2b1f','#3d2b1f','transparent','transparent'],
+        ['transparent','#3d2b1f','#e8a040','#e8a040','#e8a040','#e8a040','#e8a040','#e8a040','#e8a040','#e8a040','#3d2b1f','transparent'],
+        ['transparent','#3d2b1f','#e8a040','#e8a040','#ff6b35','#ff6b35','#ff6b35','#ff6b35','#e8a040','#e8a040','#3d2b1f','transparent'],
+        ['transparent','#3d2b1f','#e8a040','#ff6b35','#ff6b35','#ff6b35','#ff6b35','#ff6b35','#ff6b35','#e8a040','#3d2b1f','transparent'],
+        ['#3d2b1f','#3d2b1f','#e8a040','#ff6b35','#ff6b35','#ff6b35','#ff6b35','#ff6b35','#ff6b35','#e8a040','#3d2b1f','#3d2b1f'],
+        ['#3d2b1f','#e8a040','#e8a040','#ff6b35','#ff6b35','#ff6b35','#ff6b35','#ff6b35','#ff6b35','#e8a040','#e8a040','#3d2b1f'],
+        ['#3d2b1f','#e8a040','#e8a040','#c0c0c0','#c0c0c0','#3d2b1f','#3d2b1f','#c0c0c0','#c0c0c0','#e8a040','#e8a040','#3d2b1f'],
+        ['#3d2b1f','#e8a040','#c0c0c0','#c0c0c0','#3d2b1f','#3d2b1f','#3d2b1f','#3d2b1f','#c0c0c0','#c0c0c0','#e8a040','#3d2b1f'],
+        ['transparent','#3d2b1f','#3d2b1f','#3d2b1f','#3d2b1f','#3d2b1f','#3d2b1f','#3d2b1f','#3d2b1f','#3d2b1f','#3d2b1f','transparent'],
+        ['transparent','transparent','#3d2b1f','#3d2b1f','#5a3d2b','#5a3d2b','#5a3d2b','#5a3d2b','#3d2b1f','#3d2b1f','transparent','transparent'],
+        ['transparent','transparent','#5a3d2b','#5a3d2b','#5a3d2b','#3d2b1f','#3d2b1f','#5a3d2b','#5a3d2b','#5a3d2b','transparent','transparent'],
+        ['transparent','transparent','transparent','#5a3d2b','#5a3d2b','#5a3d2b','#5a3d2b','#5a3d2b','#5a3d2b','transparent','transparent','transparent']
+      ],
+      rogue: [
+        ['transparent','transparent','#1a2a3a','#1a2a3a','#1a2a3a','#1a2a3a','#1a2a3a','#1a2a3a','#1a2a3a','#1a2a3a','transparent','transparent'],
+        ['transparent','#1a2a3a','#4a8ab5','#4a8ab5','#4a8ab5','#4a8ab5','#4a8ab5','#4a8ab5','#4a8ab5','#4a8ab5','#1a2a3a','transparent'],
+        ['transparent','#1a2a3a','#4a8ab5','#4a8ab5','#3a7aaa','#3a7aaa','#3a7aaa','#3a7aaa','#4a8ab5','#4a8ab5','#1a2a3a','transparent'],
+        ['transparent','#1a2a3a','#4a8ab5','#3a7aaa','#3a7aaa','#3a7aaa','#3a7aaa','#3a7aaa','#3a7aaa','#4a8ab5','#1a2a3a','transparent'],
+        ['#1a2a3a','#1a2a3a','#4a8ab5','#3a7aaa','#3a7aaa','#3a7aaa','#3a7aaa','#3a7aaa','#3a7aaa','#4a8ab5','#1a2a3a','#1a2a3a'],
+        ['#1a2a3a','#4a8ab5','#4a8ab5','#3a7aaa','#3a7aaa','#3a7aaa','#3a7aaa','#3a7aaa','#3a7aaa','#4a8ab5','#4a8ab5','#1a2a3a'],
+        ['#1a2a3a','#4a8ab5','#4a8ab5','#c0c0c0','#c0c0c0','#1a2a3a','#1a2a3a','#c0c0c0','#c0c0c0','#4a8ab5','#4a8ab5','#1a2a3a'],
+        ['#1a2a3a','#4a8ab5','#c0c0c0','#c0c0c0','#1a2a3a','#1a2a3a','#1a2a3a','#1a2a3a','#c0c0c0','#c0c0c0','#4a8ab5','#1a2a3a'],
+        ['transparent','#1a2a3a','#1a2a3a','#1a2a3a','#1a2a3a','#1a2a3a','#1a2a3a','#1a2a3a','#1a2a3a','#1a2a3a','#1a2a3a','transparent'],
+        ['transparent','transparent','#1a2a3a','#1a2a3a','#2a3a4a','#2a3a4a','#2a3a4a','#2a3a4a','#1a2a3a','#1a2a3a','transparent','transparent'],
+        ['transparent','transparent','#2a3a4a','#2a3a4a','#2a3a4a','#1a2a3a','#1a2a3a','#2a3a4a','#2a3a4a','#2a3a4a','transparent','transparent'],
+        ['transparent','transparent','transparent','#2a3a4a','#2a3a4a','#2a3a4a','#2a3a4a','#2a3a4a','#2a3a4a','transparent','transparent','transparent']
+      ],
+      mage: [
+        ['transparent','transparent','#2a1a3a','#2a1a3a','#2a1a3a','#2a1a3a','#2a1a3a','#2a1a3a','#2a1a3a','#2a1a3a','transparent','transparent'],
+        ['transparent','#2a1a3a','#8a4aaa','#8a4aaa','#8a4aaa','#8a4aaa','#8a4aaa','#8a4aaa','#8a4aaa','#8a4aaa','#2a1a3a','transparent'],
+        ['transparent','#2a1a3a','#8a4aaa','#8a4aaa','#aa66cc','#aa66cc','#aa66cc','#aa66cc','#8a4aaa','#8a4aaa','#2a1a3a','transparent'],
+        ['transparent','#2a1a3a','#8a4aaa','#aa66cc','#aa66cc','#aa66cc','#aa66cc','#aa66cc','#aa66cc','#8a4aaa','#2a1a3a','transparent'],
+        ['#2a1a3a','#2a1a3a','#8a4aaa','#aa66cc','#aa66cc','#aa66cc','#aa66cc','#aa66cc','#aa66cc','#8a4aaa','#2a1a3a','#2a1a3a'],
+        ['#2a1a3a','#8a4aaa','#8a4aaa','#aa66cc','#aa66cc','#aa66cc','#aa66cc','#aa66cc','#aa66cc','#8a4aaa','#8a4aaa','#2a1a3a'],
+        ['#2a1a3a','#8a4aaa','#8a4aaa','#c0c0c0','#c0c0c0','#2a1a3a','#2a1a3a','#c0c0c0','#c0c0c0','#8a4aaa','#8a4aaa','#2a1a3a'],
+        ['#2a1a3a','#8a4aaa','#c0c0c0','#c0c0c0','#2a1a3a','#2a1a3a','#2a1a3a','#2a1a3a','#c0c0c0','#c0c0c0','#8a4aaa','#2a1a3a'],
+        ['transparent','#2a1a3a','#2a1a3a','#2a1a3a','#2a1a3a','#2a1a3a','#2a1a3a','#2a1a3a','#2a1a3a','#2a1a3a','#2a1a3a','transparent'],
+        ['transparent','transparent','#2a1a3a','#2a1a3a','#3a2a4a','#3a2a4a','#3a2a4a','#3a2a4a','#2a1a3a','#2a1a3a','transparent','transparent'],
+        ['transparent','transparent','#3a2a4a','#3a2a4a','#3a2a4a','#2a1a3a','#2a1a3a','#3a2a4a','#3a2a4a','#3a2a4a','transparent','transparent'],
+        ['transparent','transparent','transparent','#3a2a4a','#3a2a4a','#3a2a4a','#3a2a4a','#3a2a4a','#3a2a4a','transparent','transparent','transparent']
+      ],
+      paladin: [
+        ['transparent','transparent','#2a1a1a','#2a1a1a','#2a1a1a','#2a1a1a','#2a1a1a','#2a1a1a','#2a1a1a','#2a1a1a','transparent','transparent'],
+        ['transparent','#2a1a1a','#e8b84a','#e8b84a','#e8b84a','#e8b84a','#e8b84a','#e8b84a','#e8b84a','#e8b84a','#2a1a1a','transparent'],
+        ['transparent','#2a1a1a','#e8b84a','#e8b84a','#5a8a4a','#5a8a4a','#5a8a4a','#5a8a4a','#e8b84a','#e8b84a','#2a1a1a','transparent'],
+        ['transparent','#2a1a1a','#e8b84a','#5a8a4a','#5a8a4a','#5a8a4a','#5a8a4a','#5a8a4a','#5a8a4a','#e8b84a','#2a1a1a','transparent'],
+        ['#2a1a1a','#2a1a1a','#e8b84a','#5a8a4a','#5a8a4a','#5a8a4a','#5a8a4a','#5a8a4a','#5a8a4a','#e8b84a','#2a1a1a','#2a1a1a'],
+        ['#2a1a1a','#e8b84a','#e8b84a','#5a8a4a','#5a8a4a','#5a8a4a','#5a8a4a','#5a8a4a','#5a8a4a','#e8b84a','#e8b84a','#2a1a1a'],
+        ['#2a1a1a','#e8b84a','#e8b84a','#c0c0c0','#c0c0c0','#2a1a1a','#2a1a1a','#c0c0c0','#c0c0c0','#e8b84a','#e8b84a','#2a1a1a'],
+        ['#2a1a1a','#e8b84a','#c0c0c0','#c0c0c0','#2a1a1a','#2a1a1a','#2a1a1a','#2a1a1a','#c0c0c0','#c0c0c0','#e8b84a','#2a1a1a'],
+        ['transparent','#2a1a1a','#2a1a1a','#2a1a1a','#2a1a1a','#2a1a1a','#2a1a1a','#2a1a1a','#2a1a1a','#2a1a1a','#2a1a1a','transparent'],
+        ['transparent','transparent','#2a1a1a','#2a1a1a','#3a2a2a','#3a2a2a','#3a2a2a','#3a2a2a','#2a1a1a','#2a1a1a','transparent','transparent'],
+        ['transparent','transparent','#3a2a2a','#3a2a2a','#3a2a2a','#2a1a1a','#2a1a1a','#3a2a2a','#3a2a2a','#3a2a2a','transparent','transparent'],
+        ['transparent','transparent','transparent','#3a2a2a','#3a2a2a','#3a2a2a','#3a2a2a','#3a2a2a','#3a2a2a','transparent','transparent','transparent']
+      ]
+    };
+
+    // ---- ENEMY SPRITES (10x10) ----
+    const ENEMY_SPRITES = {
+      'Shadow Slime': [
+        ['transparent','#2a1a1a','#3a2a2a','#3a2a2a','#3a2a2a','#3a2a2a','#3a2a2a','#3a2a2a','#2a1a1a','transparent'],
+        ['#2a1a1a','#4a3a3a','#5a4a4a','#ff4444','#ff4444','#ff4444','#ff4444','#5a4a4a','#4a3a3a','#2a1a1a'],
+        ['#3a2a2a','#5a4a4a','#ff4444','#ff4444','#ff4444','#ff4444','#ff4444','#ff4444','#5a4a4a','#3a2a2a'],
+        ['#3a2a2a','#5a4a4a','#ff4444','#ff4444','#ff4444','#ff4444','#ff4444','#ff4444','#5a4a4a','#3a2a2a'],
+        ['#3a2a2a','#5a4a4a','#ff4444','#ff4444','#ff4444','#ff4444','#ff4444','#ff4444','#5a4a4a','#3a2a2a'],
+        ['#3a2a2a','#5a4a4a','#ff4444','#ff4444','#ff4444','#ff4444','#ff4444','#ff4444','#5a4a4a','#3a2a2a'],
+        ['#2a1a1a','#4a3a3a','#5a4a4a','#ff4444','#ff4444','#ff4444','#ff4444','#5a4a4a','#4a3a3a','#2a1a1a'],
+        ['transparent','#2a1a1a','#3a2a2a','#3a2a2a','#3a2a2a','#3a2a2a','#3a2a2a','#3a2a2a','#2a1a1a','transparent'],
+        ['transparent','transparent','#2a1a1a','#2a1a1a','#2a1a1a','#2a1a1a','#2a1a1a','#2a1a1a','transparent','transparent'],
+        ['transparent','transparent','transparent','transparent','#2a1a1a','#2a1a1a','transparent','transparent','transparent','transparent']
+      ],
+      'Dark Goblin': [
+        ['transparent','#3a2a1a','#4a3a2a','#4a3a2a','#4a3a2a','#4a3a2a','#4a3a2a','#4a3a2a','#3a2a1a','transparent'],
+        ['#3a2a1a','#5a4a3a','#ff6633','#ff6633','#ff8844','#ff8844','#ff6633','#ff6633','#5a4a3a','#3a2a1a'],
+        ['#4a3a2a','#5a4a3a','#ff6633','#ff4400','#ff4400','#ff4400','#ff4400','#ff6633','#5a4a3a','#4a3a2a'],
+        ['#4a3a2a','#5a4a3a','#ff8844','#ff4400','#ff4400','#ff4400','#ff4400','#ff8844','#5a4a3a','#4a3a2a'],
+        ['#4a3a2a','#6a5a4a','#6a5a4a','#ff8844','#ff8844','#ff8844','#ff8844','#6a5a4a','#6a5a4a','#4a3a2a'],
+        ['#4a3a2a','#6a5a4a','#8a7a6a','#4a3a2a','#4a3a2a','#4a3a2a','#4a3a2a','#8a7a6a','#6a5a4a','#4a3a2a'],
+        ['#3a2a1a','#5a4a3a','#5a4a3a','#3a2a1a','#3a2a1a','#3a2a1a','#3a2a1a','#5a4a3a','#5a4a3a','#3a2a1a'],
+        ['transparent','#3a2a1a','#4a3a2a','#4a3a2a','#4a3a2a','#4a3a2a','#4a3a2a','#4a3a2a','#3a2a1a','transparent'],
+        ['transparent','transparent','#3a2a1a','#3a2a1a','#3a2a1a','#3a2a1a','#3a2a1a','#3a2a1a','transparent','transparent'],
+        ['transparent','transparent','transparent','transparent','#3a2a1a','#3a2a1a','transparent','transparent','transparent','transparent']
+      ],
+      'Wraith Wolf': [
+        ['transparent','#2a3a4a','#3a4a5a','#3a4a5a','#3a4a5a','#3a4a5a','#3a4a5a','#3a4a5a','#2a3a4a','transparent'],
+        ['#2a3a4a','#4a5a6a','#ff6633','#ff6633','#ff8844','#ff8844','#ff6633','#ff6633','#4a5a6a','#2a3a4a'],
+        ['#3a4a5a','#4a5a6a','#ff6633','#ff4400','#ff4400','#ff4400','#ff4400','#ff6633','#4a5a6a','#3a4a5a'],
+        ['#3a4a5a','#4a5a6a','#ff8844','#ff4400','#ff4400','#ff4400','#ff4400','#ff8844','#4a5a6a','#3a4a5a'],
+        ['#3a4a5a','#5a6a7a','#5a6a7a','#ff8844','#ff8844','#ff8844','#ff8844','#5a6a7a','#5a6a7a','#3a4a5a'],
+        ['#3a4a5a','#5a6a7a','#7a8a9a','#3a4a5a','#3a4a5a','#3a4a5a','#3a4a5a','#7a8a9a','#5a6a7a','#3a4a5a'],
+        ['#2a3a4a','#4a5a6a','#4a5a6a','#2a3a4a','#2a3a4a','#2a3a4a','#2a3a4a','#4a5a6a','#4a5a6a','#2a3a4a'],
+        ['transparent','#2a3a4a','#3a4a5a','#3a4a5a','#3a4a5a','#3a4a5a','#3a4a5a','#3a4a5a','#2a3a4a','transparent'],
+        ['transparent','transparent','#2a3a4a','#2a3a4a','#2a3a4a','#2a3a4a','#2a3a4a','#2a3a4a','transparent','transparent'],
+        ['transparent','transparent','transparent','transparent','#2a3a4a','#2a3a4a','transparent','transparent','transparent','transparent']
+      ],
+      'Fell Orc': [
+        ['transparent','#2a2a1a','#3a3a2a','#3a3a2a','#3a3a2a','#3a3a2a','#3a3a2a','#3a3a2a','#2a2a1a','transparent'],
+        ['#2a2a1a','#4a4a3a','#ff6633','#ff6633','#ff8844','#ff8844','#ff6633','#ff6633','#4a4a3a','#2a2a1a'],
+        ['#3a3a2a','#4a4a3a','#ff6633','#ff4400','#ff4400','#ff4400','#ff4400','#ff6633','#4a4a3a','#3a3a2a'],
+        ['#3a3a2a','#4a4a3a','#ff8844','#ff4400','#ff4400','#ff4400','#ff4400','#ff8844','#4a4a3a','#3a3a2a'],
+        ['#3a3a2a','#5a5a4a','#5a5a4a','#ff8844','#ff8844','#ff8844','#ff8844','#5a5a4a','#5a5a4a','#3a3a2a'],
+        ['#3a3a2a','#5a5a4a','#7a7a6a','#3a3a2a','#3a3a2a','#3a3a2a','#3a3a2a','#7a7a6a','#5a5a4a','#3a3a2a'],
+        ['#2a2a1a','#4a4a3a','#4a4a3a','#2a2a1a','#2a2a1a','#2a2a1a','#2a2a1a','#4a4a3a','#4a4a3a','#2a2a1a'],
+        ['transparent','#2a2a1a','#3a3a2a','#3a3a2a','#3a3a2a','#3a3a2a','#3a3a2a','#3a3a2a','#2a2a1a','transparent'],
+        ['transparent','transparent','#2a2a1a','#2a2a1a','#2a2a1a','#2a2a1a','#2a2a1a','#2a2a1a','transparent','transparent'],
+        ['transparent','transparent','transparent','transparent','#2a2a1a','#2a2a1a','transparent','transparent','transparent','transparent']
+      ]
+    };
+
+    // ---- ENVIRONMENT - Colorful ground tiles ----
+    const GROUND_COLORS = [
+      '#2a4a3a', '#2d4d3d', '#2a4a3a', '#2d4d3d', '#2a4a3a',
+      '#3a5a4a', '#3d5d4d', '#3a5a4a', '#3d5d4d', '#3a5a4a',
+      '#2a4a3a', '#2d4d3d', '#2a4a3a', '#2d4d3d', '#2a4a3a',
+      '#3a5a4a', '#3d5d4d', '#3a5a4a', '#3d5d4d', '#3a5a4a'
+    ];
+    const FLOWER_COLORS = ['#ff6b6b', '#ffd93d', '#6bcbff', '#ff8a5c', '#c084fc'];
+
+    // ---- DRAW PIXEL ART SPRITE ----
+    function drawPixelArt(ctx, sprite, x, y, size, tint = null, flip = false) {
+      if (!sprite || !sprite.length) return;
+      const rows = sprite.length;
+      const cols = sprite[0].length;
+      const pixelSize = size / rows;
+
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          let color = sprite[row][col];
+          if (!color || color === 'transparent') continue;
+
+          if (tint && color !== '#000000') {
+            const r = parseInt(color.slice(1,3), 16);
+            const g = parseInt(color.slice(3,5), 16);
+            const b = parseInt(color.slice(5,7), 16);
+            const tr = parseInt(tint.slice(1,3), 16);
+            const tg = parseInt(tint.slice(3,5), 16);
+            const tb = parseInt(tint.slice(5,7), 16);
+            const blend = 0.25;
+            const nr = Math.round(r + (tr - r) * blend);
+            const ng = Math.round(g + (tg - g) * blend);
+            const nb = Math.round(b + (tb - b) * blend);
+            color = `#${Math.min(255, nr).toString(16).padStart(2, '0')}${Math.min(255, ng).toString(16).padStart(2, '0')}${Math.min(255, nb).toString(16).padStart(2, '0')}`;
+          }
+
+          const px = flip ? x + (cols - 1 - col) * pixelSize : x + col * pixelSize;
+          const py = y + row * pixelSize;
+          ctx.fillStyle = color;
+          ctx.fillRect(px, py, Math.ceil(pixelSize + 0.5), Math.ceil(pixelSize + 0.5));
+        }
+      }
+    }
+
+    // ---- GET SPRITE ----
+    function getPlayerSprite() {
+      return PLAYER_SPRITES[player.class] || PLAYER_SPRITES.warrior;
+    }
+
+    function getEnemySprite(name) {
+      return ENEMY_SPRITES[name] || ENEMY_SPRITES['Shadow Slime'];
+    }
+
+    // ============================================================
+    //  MENU SYSTEM
+    // ============================================================
+    const mainMenu = document.getElementById('mainMenu');
+    const charCreation = document.getElementById('charCreation');
+    const app = document.getElementById('app');
+    const newGameBtn = document.getElementById('newGameBtn');
+    const continueBtn = document.getElementById('continueBtn');
+    const continueBadge = document.getElementById('continueBadge');
+    const fullGameBtn = document.getElementById('fullGameBtn');
+    const charBackBtn = document.getElementById('charBackBtn');
+    const charStartBtn = document.getElementById('charStartBtn');
+    const charName = document.getElementById('charName');
+    const charClass = document.getElementById('charClass');
+    const menuBackBtn = document.getElementById('menuBackBtn');
+
+    let hasSaveData = false;
+    let gameInitialized = false;
+
+    function checkSaveData() {
+      try {
+        const raw = localStorage.getItem('rabbithollow_dark_v2');
+        hasSaveData = !!raw;
+        continueBadge.textContent = hasSaveData ? '✅ Load' : '—';
+        continueBadge.className = `badge ${hasSaveData ? 'unlocked' : ''}`;
+      } catch(e) { hasSaveData = false; }
+    }
+
+    const classBonuses = {
+      warrior: { strength: 2, agility: 0, vitality: 0, intelligence: 0 },
+      rogue: { strength: 0, agility: 2, vitality: 0, intelligence: 0 },
+      mage: { strength: 0, agility: 0, vitality: 0, intelligence: 2 },
+      paladin: { strength: 0, agility: 0, vitality: 2, intelligence: 0 }
+    };
+
+    function updatePreview() {
+      const cls = charClass.value;
+      const bonus = classBonuses[cls] || classBonuses.warrior;
+      document.getElementById('previewStr').textContent = 5 + bonus.strength;
+      document.getElementById('previewAgi').textContent = 5 + bonus.agility;
+      document.getElementById('previewVit').textContent = 5 + bonus.vitality;
+      document.getElementById('previewInt').textContent = 5 + bonus.intelligence;
+    }
+
+    charClass.addEventListener('change', updatePreview);
+    updatePreview();
+
+    newGameBtn.addEventListener('click', () => {
+      mainMenu.classList.add('hidden');
+      charCreation.classList.remove('hidden');
+      charName.value = 'Dark Hunter';
+      charName.focus();
+      charName.select();
+    });
+
+    charBackBtn.addEventListener('click', () => {
+      charCreation.classList.add('hidden');
+      mainMenu.classList.remove('hidden');
+    });
+
+    charStartBtn.addEventListener('click', () => {
+      const name = charName.value.trim() || 'Dark Hunter';
+      const cls = charClass.value;
+      const bonus = classBonuses[cls] || classBonuses.warrior;
+
+      const baseStats = { strength: 5, agility: 5, vitality: 5, intelligence: 5 };
+      baseStats.strength += bonus.strength;
+      baseStats.agility += bonus.agility;
+      baseStats.vitality += bonus.vitality;
+      baseStats.intelligence += bonus.intelligence;
+
+      const newPlayer = {
+        x: 1600, y: 1100, radius: 18, speed: 180,
+        level: 1, xp: 0, xpToNext: 100, hp: 100, maxHp: 100, mana: 50, maxMana: 50,
+        statPoints: 0, stats: baseStats,
+        inventory: [], equipment: { Weapon: null, Helmet: null, Armor: null, Gloves: null, Boots: null, Ring: null },
+        cooldowns: [0,0,0,0,0], attackCooldown: 0, attackAngle: 0, invulnerability: 0, dashTime: 0, critBuff: 0,
+        name: name, class: cls
+      };
+
+      Object.assign(player, newPlayer);
+      syncDerivedStats();
+      player.hp = player.maxHp;
+      player.mana = player.maxMana;
+
+      localStorage.removeItem('rabbithollow_dark_v2');
+      startGame();
+    });
+
+    continueBtn.addEventListener('click', () => {
+      if (!hasSaveData) { showToast('No save found. Start a new game.'); return; }
+      startGame();
+    });
+
+    fullGameBtn.addEventListener('click', () => {
+      showToast('🔒 Full game available for 200 CZK. Coming soon!');
+    });
+
+    menuBackBtn.addEventListener('click', () => {
+      closePanel(ui.menuPanel);
+      goToMainMenu();
+    });
+
+    function goToMainMenu() {
+      app.classList.remove('visible');
+      mainMenu.classList.remove('hidden');
+      charCreation.classList.add('hidden');
+      gameInitialized = false;
+      gameLoopRunning = false;
+    }
+
+    function startGame() {
+      charCreation.classList.add('hidden');
+      mainMenu.classList.add('hidden');
+      app.classList.add('visible');
+
+      document.getElementById('playerNameDisplay').textContent = `⚔️ ${player.name || 'Dark Hunter'}`;
+
+      if (!gameInitialized) {
+        initGame();
+        gameInitialized = true;
+      } else {
+        syncDerivedStats();
+        updateHud();
+        renderInventory();
+        lastTime = performance.now();
+        gameLoopRunning = true;
+        requestAnimationFrame(gameLoop);
+      }
+    }
+
+    let menuToastTimer = 0;
+    let menuToastEl = null;
+
+    function showToast(msg) {
+      if (!menuToastEl) {
+        menuToastEl = document.createElement('div');
+        menuToastEl.style.cssText = `
+          position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+          padding: 12px 28px; background: rgba(26,26,46,0.95); border: 1px solid rgba(255,200,100,0.1);
+          border-radius: 12px; color: #e8e0d4; font-family: 'MedievalSharp', cursive;
+          z-index: 99999; transition: all 0.3s ease; opacity: 0;
+          font-size: 15px; backdrop-filter: blur(10px);
+        `;
+        document.body.appendChild(menuToastEl);
+      }
+
+      menuToastEl.textContent = msg;
+      menuToastEl.style.opacity = '1';
+      clearTimeout(menuToastTimer);
+      menuToastTimer = setTimeout(() => {
+        menuToastEl.style.opacity = '0';
+      }, 2500);
+    }
+
+    // ============================================================
+    //  GAME CODE
+    // ============================================================
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const saveKey = "rabbithollow_dark_v2";
+
+    const ui = {
+      hpFill: document.getElementById("hpFill"),
+      manaFill: document.getElementById("manaFill"),
+      xpFill: document.getElementById("xpFill"),
+      hpText: document.getElementById("hpText"),
+      manaText: document.getElementById("manaText"),
+      xpText: document.getElementById("xpText"),
+      levelText: document.getElementById("levelText"),
+      combatLog: document.getElementById("combatLog"),
+      toast: document.getElementById("toast"),
+      levelUp: document.getElementById("levelUp"),
+      statsPanel: document.getElementById("statsPanel"),
+      inventoryPanel: document.getElementById("inventoryPanel"),
+      menuPanel: document.getElementById("menuPanel")
+    };
+
+    const world = { width: 3200, height: 2200, tile: 40, cameraX: 0, cameraY: 0, time: 0 };
+    const keys = new Set();
+    const mouse = { x: 0, y: 0, down: false, active: false };
+    const joystick = { active: false, pointerId: null, x: 0, y: 0 };
+
+    const player = {
+      x: 1600, y: 1100, radius: 18, speed: 180,
+      level: 1, xp: 0, xpToNext: 100, hp: 100, maxHp: 100, mana: 50, maxMana: 50,
+      statPoints: 0, stats: { strength: 5, agility: 5, vitality: 5, intelligence: 5 },
+      inventory: [], equipment: { Weapon: null, Helmet: null, Armor: null, Gloves: null, Boots: null, Ring: null },
+      cooldowns: [0,0,0,0,0], attackCooldown: 0, attackAngle: 0, invulnerability: 0, dashTime: 0, critBuff: 0,
+      name: 'Dark Hunter', class: 'warrior'
+    };
+
+    const enemies = [], drops = [], particles = [], floatingTexts = [], logs = [];
+
+    const skills = [
+      { name: "Power Strike", cost: 8, cooldown: 1.1, unlock: 1 },
+      { name: "Whirlwind", cost: 15, cooldown: 3.2, unlock: 2 },
+      { name: "Dash", cost: 12, cooldown: 2.2, unlock: 3 },
+      { name: "Fireball", cost: 18, cooldown: 2.5, unlock: 4 },
+      { name: "Critical Strike", cost: 20, cooldown: 8, unlock: 5 }
+    ];
+
+    const enemyTypes = [
+      { name: "Shadow Slime", color: "#5a4a4a", hp: 35, damage: 7, speed: 55, xp: 25, radius: 17 },
+      { name: "Dark Goblin", color: "#6a5a4a", hp: 55, damage: 11, speed: 70, xp: 40, radius: 18 },
+      { name: "Wraith Wolf", color: "#5a6a7a", hp: 75, damage: 15, speed: 100, xp: 55, radius: 20 },
+      { name: "Fell Orc", color: "#5a5a4a", hp: 130, damage: 22, speed: 45, xp: 85, radius: 25 }
+    ];
+
+    const rarityData = [
+      { name: "Common", chance: 0.58, multiplier: 1, className: "rarity-common" },
+      { name: "Uncommon", chance: 0.25, multiplier: 1.5, className: "rarity-uncommon" },
+      { name: "Rare", chance: 0.11, multiplier: 2.2, className: "rarity-rare" },
+      { name: "Epic", chance: 0.05, multiplier: 3.2, className: "rarity-epic" },
+      { name: "Legendary", chance: 0.01, multiplier: 5, className: "rarity-legendary" }
+    ];
+
+    const itemTypes = ["Weapon", "Helmet", "Armor", "Gloves", "Boots", "Ring"];
+
+    let lastTime = performance.now();
+    let enemySpawnTimer = 0;
+    let autoSaveTimer = 0;
+    let toastTimer = 0;
+    let gameLoopRunning = false;
+
+    // ============================================================
+    //  HELPERS
+    // ============================================================
+    function distance(ax, ay, bx, by) { return Math.hypot(ax - bx, ay - by); }
+    function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+    function random(min, max) { return Math.random() * (max - min) + min; }
+    function randomInt(min, max) { return Math.floor(random(min, max + 1)); }
+    function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[c])); }
+
+    // ============================================================
+    //  DERIVED STATS
+    // ============================================================
+    function getEquipmentBonus(stat) {
+      return Object.values(player.equipment).filter(Boolean).reduce((sum, item) => sum + (item.stats[stat] || 0), 0);
+    }
+
+    function getDerivedStats() {
+      const s = player.stats.strength + getEquipmentBonus("strength");
+      const a = player.stats.agility + getEquipmentBonus("agility");
+      const v = player.stats.vitality + getEquipmentBonus("vitality");
+      const i = player.stats.intelligence + getEquipmentBonus("intelligence");
+      const dmg = 5 + s * 2 + getEquipmentBonus("damage");
+      const maxHp = 50 + v * 10;
+      const maxMana = 20 + i * 6;
+      const atkSpd = 1 + a * 0.045 + getEquipmentBonus("attackSpeed");
+      const crit = 0.05 + a * 0.008 + getEquipmentBonus("crit");
+      return { strength: s, agility: a, vitality: v, intelligence: i, damage: dmg, maxHp, maxMana, attackSpeed: atkSpd, crit, moveSpeed: player.speed + a * 4 };
+    }
+
+    function syncDerivedStats() {
+      const oldHp = player.maxHp, oldMana = player.maxMana;
+      const stats = getDerivedStats();
+      player.maxHp = stats.maxHp;
+      player.maxMana = stats.maxMana;
+      if (oldHp !== player.maxHp) player.hp = clamp(player.hp + (player.maxHp - oldHp), 0, player.maxHp);
+      if (oldMana !== player.maxMana) player.mana = clamp(player.mana + (player.maxMana - oldMana), 0, player.maxMana);
+    }
+
+    // ============================================================
+    //  UI UPDATES
+    // ============================================================
+    function updateHud() {
+      const stats = getDerivedStats();
+      ui.hpFill.style.width = `${clamp(player.hp / player.maxHp * 100, 0, 100)}%`;
+      ui.manaFill.style.width = `${clamp(player.mana / player.maxMana * 100, 0, 100)}%`;
+      ui.xpFill.style.width = `${clamp(player.xp / player.xpToNext * 100, 0, 100)}%`;
+      ui.hpText.textContent = `${Math.ceil(player.hp)} / ${player.maxHp}`;
+      ui.manaText.textContent = `${Math.ceil(player.mana)} / ${player.maxMana}`;
+      ui.xpText.textContent = `${player.xp} / ${player.xpToNext}`;
+      ui.levelText.textContent = `LVL ${player.level}`;
+
+      document.getElementById("strengthValue").textContent = player.stats.strength;
+      document.getElementById("agilityValue").textContent = player.stats.agility;
+      document.getElementById("vitalityValue").textContent = player.stats.vitality;
+      document.getElementById("intelligenceValue").textContent = player.stats.intelligence;
+      document.getElementById("statPointsValue").textContent = player.statPoints;
+      document.getElementById("damageValue").textContent = Math.round(stats.damage);
+      document.getElementById("maxHpValue").textContent = stats.maxHp;
+      document.getElementById("maxManaValue").textContent = stats.maxMana;
+      document.getElementById("attackSpeedValue").textContent = `${stats.attackSpeed.toFixed(1)}/s`;
+      document.getElementById("critValue").textContent = `${Math.round((stats.crit + (player.critBuff > 0 ? .35 : 0)) * 100)}%`;
+
+      document.querySelectorAll(".skill").forEach(btn => {
+        const idx = Number(btn.dataset.skill);
+        const unlocked = player.level >= skills[idx].unlock;
+        btn.classList.toggle("locked", !unlocked);
+        const existing = btn.querySelector(".cooldown");
+        if (existing) existing.remove();
+        if (player.cooldowns[idx] > 0) {
+          const overlay = document.createElement("span");
+          overlay.className = "cooldown";
+          overlay.textContent = player.cooldowns[idx].toFixed(1);
+          btn.appendChild(overlay);
+        }
+      });
+    }
+
+    function addLog(msg) {
+      logs.unshift(msg);
+      logs.splice(5);
+      ui.combatLog.innerHTML = logs.map(line => `<div class="log-line">${escapeHtml(line)}</div>`).join("");
+    }
+
+    function showGameToast(msg) {
+      ui.toast.textContent = msg;
+      ui.toast.classList.add("show");
+      toastTimer = 2;
+    }
+
+    // ============================================================
+    //  XP & LEVEL
+    // ============================================================
+    function gainXp(amount) {
+      player.xp += amount;
+      while (player.xp >= player.xpToNext) {
+        player.xp -= player.xpToNext;
+        player.level += 1;
+        player.statPoints += 3;
+        player.xpToNext = Math.floor(player.xpToNext * 1.35);
+        syncDerivedStats();
+        player.hp = player.maxHp;
+        player.mana = player.maxMana;
+        ui.levelUp.classList.remove("show");
+        void ui.levelUp.offsetWidth;
+        ui.levelUp.classList.add("show");
+        addLog(`⬆ Level Up! Level ${player.level}`);
+        showGameToast(`🎉 Level ${player.level}! +3 points`);
+      }
+      updateHud();
+    }
+
+    // ============================================================
+    //  STATS
+    // ============================================================
+    function spendStat(stat) {
+      if (player.statPoints <= 0) { showGameToast("No free points."); return; }
+      if (!(stat in player.stats)) return;
+      player.stats[stat] += 1;
+      player.statPoints -= 1;
+      syncDerivedStats();
+      updateHud();
+      saveGame();
+    }
+
+    // ============================================================
+    //  ENEMIES
+    // ============================================================
+    function chooseEnemyType() {
+      const available = enemyTypes.filter((_, i) => player.level >= i * 2 + 1);
+      const base = available[randomInt(0, available.length - 1)];
+      return {
+        ...base,
+        maxHp: Math.round(base.hp * (1 + player.level * .12)),
+        damage: Math.round(base.damage * (1 + player.level * .08)),
+        xp: Math.round(base.xp * (1 + player.level * .1))
+      };
+    }
+
+    function spawnEnemy() {
+      const type = chooseEnemyType();
+      let x, y, attempts = 0;
+      do {
+        x = random(120, world.width - 120);
+        y = random(120, world.height - 120);
+        attempts++;
+      } while (distance(x, y, player.x, player.y) < 450 && attempts < 20);
+      const spriteData = getEnemySprite(type.name);
+      enemies.push({
+        id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+        x, y, radius: type.radius, name: type.name, color: type.color,
+        hp: type.maxHp, maxHp: type.maxHp, damage: type.damage,
+        speed: type.speed, xp: type.xp, attackCooldown: random(.2, .8), hitFlash: 0,
+        sprite: spriteData
+      });
+    }
+
+    // ============================================================
+    //  DROPS
+    // ============================================================
+    function createDrop(x, y) {
+      if (Math.random() > .72) return;
+      let roll = Math.random(), cum = 0, rarity = rarityData[0];
+      for (const entry of rarityData) {
+        cum += entry.chance;
+        if (roll <= cum) { rarity = entry; break; }
+      }
+      const type = itemTypes[randomInt(0, itemTypes.length - 1)];
+      const mult = rarity.multiplier * (1 + player.level * .06);
+      const stats = { strength: 0, agility: 0, vitality: 0, intelligence: 0, damage: 0, attackSpeed: 0, crit: 0 };
+      const primary = ["strength","agility","vitality","intelligence"][randomInt(0,3)];
+      stats[primary] = randomInt(1, Math.max(1, Math.floor(4 * mult)));
+      if (type === "Weapon") stats.damage = randomInt(2, Math.max(2, Math.floor(8 * mult)));
+      if (type === "Gloves") stats.attackSpeed = Number((.02 * mult).toFixed(3));
+      if (type === "Ring") stats.crit = Number((.01 * mult).toFixed(3));
+      drops.push({
+        x, y, radius: 9,
+        item: { id: `${Date.now()}-${Math.random()}`, name: `${rarity.name} ${type}`, type, rarity: rarity.name, className: rarity.className, stats },
+        pulse: random(0, Math.PI * 2)
+      });
+    }
+
+    function collectDrops() {
+      for (let i = drops.length - 1; i >= 0; i--) {
+        const drop = drops[i];
+        if (distance(player.x, player.y, drop.x, drop.y) < player.radius + 20) {
+          player.inventory.push(drop.item);
+          drops.splice(i, 1);
+          addLog(`Loot: ${drop.item.name}`);
+          showGameToast(`💎 ${drop.item.name}`);
+          spawnParticles(drop.x, drop.y, "#f5c842", 10);
+          saveGame();
+        }
+      }
+    }
+
+    function equipItem(index) {
+      const item = player.inventory[index];
+      if (!item) return;
+      const old = player.equipment[item.type];
+      player.equipment[item.type] = item;
+      player.inventory.splice(index, 1);
+      if (old) player.inventory.push(old);
+      syncDerivedStats();
+      renderInventory();
+      updateHud();
+      saveGame();
+      showGameToast(`⚔️ Equipped: ${item.name}`);
+    }
+
+    function renderInventory() {
+      const equipList = document.getElementById("equipmentList");
+      const invList = document.getElementById("inventoryList");
+
+      equipList.innerHTML = Object.entries(player.equipment).map(([slot, item]) => {
+        if (!item) return `<div class="stat-row"><span>${slot}</span><span class="item-meta">Empty</span></div>`;
+        return `<div class="item"><div class="item-title"><span class="${item.className}">${escapeHtml(item.name)}</span><span>${item.type}</span></div><div class="item-meta">${formatItemStats(item.stats)}</div></div>`;
+      }).join("");
+
+      invList.innerHTML = player.inventory.length
+        ? player.inventory.map((item, index) => `
+          <div class="item">
+            <div class="item-title"><span class="${item.className}">${escapeHtml(item.name)}</span><span>${item.type}</span></div>
+            <div class="item-meta">${formatItemStats(item.stats)}</div>
+            <button data-equip="${index}">Equip</button>
+          </div>
+        `).join("")
+        : `<p class="item-meta">Inventory empty.</p>`;
+    }
+
+    function formatItemStats(stats) {
+      const labels = { strength:"STR", agility:"AGI", vitality:"VIT", intelligence:"INT", damage:"DMG", attackSpeed:"AS", crit:"CRIT" };
+      return Object.entries(stats).filter(([,v]) => v).map(([k,v]) =>
+        `${labels[k]} +${(k === "crit" || k === "attackSpeed") ? Math.round(v * 100) + "%" : v}`
+      ).join(" · ") || "No bonus";
+    }
+
+    function rarityColor(rarity) {
+      return { Common:"#a0a0a0", Uncommon:"#5bc85b", Rare:"#5b9dff", Epic:"#c084fc", Legendary:"#ff8c00" }[rarity] || "#fff";
+    }
+
+    // ============================================================
+    //  COMBAT
+    // ============================================================
+    function performBasicAttack() {
+      if (player.attackCooldown > 0 || player.hp <= 0) return;
+      const stats = getDerivedStats();
+      player.attackCooldown = 1 / stats.attackSpeed;
+
+      let target = null, targetDist = Infinity;
+      for (const enemy of enemies) {
+        const d = distance(player.x, player.y, enemy.x, enemy.y);
+        if (d < 95 && d < targetDist) { target = enemy; targetDist = d; }
+      }
+
+      if (target) {
+        const angle = Math.atan2(target.y - player.y, target.x - player.x);
+        player.attackAngle = angle;
+        const crit = Math.random() < stats.crit + (player.critBuff > 0 ? .35 : 0);
+        const dmg = Math.round(stats.damage * (crit ? 2 : 1) * random(.85, 1.15));
+        damageEnemy(target, dmg, crit);
+        spawnParticles(target.x, target.y, crit ? "#f5c842" : "#8a8a9a", crit ? 12 : 6);
+      } else {
+        player.attackAngle = mouse.active ? Math.atan2(mouse.y - window.innerHeight/2, mouse.x - window.innerWidth/2) : player.attackAngle;
+      }
+    }
+
+    function damageEnemy(enemy, damage, critical = false) {
+      enemy.hp -= damage;
+      enemy.hitFlash = .12;
+      floatingTexts.push({
+        x: enemy.x,
+        y: enemy.y - enemy.radius,
+        text: `${critical ? "💀 " : ""}${damage}`,
+        color: critical ? "#f5c842" : "#ff8a8a",
+        life: 1
+      });
+      if (enemy.hp <= 0) {
+        const idx = enemies.indexOf(enemy);
+        if (idx !== -1) enemies.splice(idx, 1);
+        gainXp(enemy.xp);
+        createDrop(enemy.x, enemy.y);
+        spawnParticles(enemy.x, enemy.y, enemy.color, 18);
+        addLog(`💀 ${enemy.name} slain. +${enemy.xp} XP`);
+      }
+    }
+
+    function findNearestEnemy(range) {
+      let nearest = null, nearestDist = range;
+      for (const enemy of enemies) {
+        const d = distance(player.x, player.y, enemy.x, enemy.y);
+        if (d < nearestDist) { nearest = enemy; nearestDist = d; }
+      }
+      return nearest;
+    }
+
+    // ============================================================
+    //  SKILLS
+    // ============================================================
+    function useSkill(index) {
+      const skill = skills[index];
+      if (!skill || player.level < skill.unlock) { showGameToast(`Unlocks at Level ${skill?.unlock ?? 1}.`); return; }
+      if (player.cooldowns[index] > 0) return;
+      if (player.mana < skill.cost) { showGameToast("Not enough mana."); return; }
+
+      player.mana -= skill.cost;
+      player.cooldowns[index] = skill.cooldown;
+      const stats = getDerivedStats();
+
+      if (index === 0) {
+        const target = findNearestEnemy(120);
+        if (target) { damageEnemy(target, Math.round(stats.damage * 2.4), true); spawnParticles(target.x, target.y, "#f5c842", 20); }
+      }
+      if (index === 1) {
+        for (const enemy of [...enemies]) {
+          if (distance(player.x, player.y, enemy.x, enemy.y) < 145) damageEnemy(enemy, Math.round(stats.damage * 1.5));
+        }
+        spawnParticles(player.x, player.y, "#8b9dff", 30);
+      }
+      if (index === 2) {
+        const angle = mouse.active ? Math.atan2(mouse.y - window.innerHeight/2, mouse.x - window.innerWidth/2) : player.attackAngle;
+        player.x = clamp(player.x + Math.cos(angle) * 220, 50, world.width - 50);
+        player.y = clamp(player.y + Math.sin(angle) * 220, 50, world.height - 50);
+        player.dashTime = .25;
+        for (const enemy of [...enemies]) {
+          if (distance(player.x, player.y, enemy.x, enemy.y) < 80) damageEnemy(enemy, Math.round(stats.damage * 1.8));
+        }
+        spawnParticles(player.x, player.y, "#5b9dff", 20);
+      }
+      if (index === 3) {
+        const target = findNearestEnemy(650);
+        if (target) {
+          damageEnemy(target, Math.round((stats.damage + stats.intelligence * 3) * 2), true);
+          spawnParticles(target.x, target.y, "#ff6b6b", 24);
+        } else showGameToast("No enemy in range.");
+      }
+      if (index === 4) {
+        player.critBuff = 6;
+        showGameToast("💀 Critical Strike active for 6s.");
+        spawnParticles(player.x, player.y, "#ff8c00", 24);
+      }
+      updateHud();
+    }
+
+    // ============================================================
+    //  PARTICLES
+    // ============================================================
+    function spawnParticles(x, y, color, count) {
+      for (let i = 0; i < count; i++) {
+        const angle = random(0, Math.PI * 2);
+        const speed = random(30, 130);
+        particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: random(.25, .7), maxLife: .7, size: random(2, 6), color });
+      }
+    }
+
+    // ============================================================
+    //  PLAYER UPDATE
+    // ============================================================
+    function updatePlayer(dt) {
+      if (player.hp <= 0) return;
+      const stats = getDerivedStats();
+      let dx = 0, dy = 0;
+      if (keys.has("w") || keys.has("arrowup")) dy -= 1;
+      if (keys.has("s") || keys.has("arrowdown")) dy += 1;
+      if (keys.has("a") || keys.has("arrowleft")) dx -= 1;
+      if (keys.has("d") || keys.has("arrowright")) dx += 1;
+      dx += joystick.x; dy += joystick.y;
+      const len = Math.hypot(dx, dy);
+      if (len > 1) { dx /= len; dy /= len; }
+
+      player.x = clamp(player.x + dx * stats.moveSpeed * dt, 35, world.width - 35);
+      player.y = clamp(player.y + dy * stats.moveSpeed * dt, 35, world.height - 35);
+
+      if (mouse.active) player.attackAngle = Math.atan2(mouse.y - window.innerHeight/2, mouse.x - window.innerWidth/2);
+      if (mouse.down) performBasicAttack();
+
+      player.attackCooldown = Math.max(0, player.attackCooldown - dt);
+      player.invulnerability = Math.max(0, player.invulnerability - dt);
+      player.dashTime = Math.max(0, player.dashTime - dt);
+      player.critBuff = Math.max(0, player.critBuff - dt);
+      for (let i = 0; i < player.cooldowns.length; i++) player.cooldowns[i] = Math.max(0, player.cooldowns[i] - dt);
+      player.mana = clamp(player.mana + dt * (2 + stats.intelligence * .15), 0, player.maxMana);
+      collectDrops();
+    }
+
+    // ============================================================
+    //  ENEMIES UPDATE
+    // ============================================================
+    function updateEnemies(dt) {
+      for (const enemy of enemies) {
+        enemy.hitFlash = Math.max(0, enemy.hitFlash - dt);
+        enemy.attackCooldown = Math.max(0, enemy.attackCooldown - dt);
+        const dx = player.x - enemy.x, dy = player.y - enemy.y, d = Math.hypot(dx, dy);
+        if (d > player.radius + enemy.radius + 4) {
+          enemy.x += dx / d * enemy.speed * dt;
+          enemy.y += dy / d * enemy.speed * dt;
+        } else if (enemy.attackCooldown <= 0 && player.invulnerability <= 0) {
+          player.hp -= enemy.damage;
+          player.invulnerability = .5;
+          enemy.attackCooldown = 1.2;
+          floatingTexts.push({ x: player.x, y: player.y - 25, text: `-${enemy.damage}`, color: "#ff6b6b", life: 1 });
+          spawnParticles(player.x, player.y, "#ff6b6b", 7);
+          if (player.hp <= 0) {
+            player.hp = 0;
+            setTimeout(respawnPlayer, 700);
+            addLog("💀 You have fallen...");
+          }
+        }
+      }
+    }
+
+    function respawnPlayer() {
+      if (player.hp > 0) return;
+      player.x = 1600;
+      player.y = 1100;
+      player.hp = player.maxHp;
+      player.mana = player.maxMana;
+      player.invulnerability = 2;
+      addLog("🔄 Respawn. The hunt continues.");
+      showGameToast("🐇 Respawn!");
+    }
+
+    // ============================================================
+    //  WORLD UPDATE
+    // ============================================================
+    function updateWorld(dt) {
+      world.time += dt;
+      enemySpawnTimer -= dt;
+      autoSaveTimer += dt;
+
+      const desired = Math.min(22, 5 + player.level * 2);
+      if (enemySpawnTimer <= 0 && enemies.length < desired) {
+        spawnEnemy();
+        enemySpawnTimer = .7;
+      }
+      if (autoSaveTimer > 10) { saveGame(); autoSaveTimer = 0; }
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.life -= dt;
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+      for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        const t = floatingTexts[i];
+        t.y -= 28 * dt;
+        t.life -= dt;
+        if (t.life <= 0) floatingTexts.splice(i, 1);
+      }
+      toastTimer -= dt;
+      if (toastTimer <= 0) ui.toast.classList.remove("show");
+    }
+
+    // ============================================================
+    //  CAMERA
+    // ============================================================
+    function updateCamera() {
+      const w = window.innerWidth, h = window.innerHeight;
+      world.cameraX = clamp(player.x - w / 2, 0, Math.max(0, world.width - w));
+      world.cameraY = clamp(player.y - h / 2, 0, Math.max(0, world.height - h));
+    }
+
+    // ============================================================
+    //  DRAW - KAION TALE STYLE
+    // ============================================================
+    function draw() {
+      const w = window.innerWidth, h = window.innerHeight;
+      ctx.clearRect(0, 0, w, h);
+
+      ctx.save();
+      ctx.translate(-world.cameraX, -world.cameraY);
+
+      drawGroundColorful();
+      drawDecorationsColorful();
+      drawDrops();
+
+      for (const enemy of enemies) {
+        drawEnemyPixel(enemy);
+      }
+
+      drawPlayerPixel();
+      drawParticles();
+      drawFloatingTexts();
+
+      ctx.restore();
+      drawMinimapColorful();
+    }
+
+    function drawGroundColorful() {
+      const tile = world.tile;
+      const startX = Math.floor(world.cameraX / tile) * tile;
+      const startY = Math.floor(world.cameraY / tile) * tile;
+      const endX = world.cameraX + window.innerWidth + tile;
+      const endY = world.cameraY + window.innerHeight + tile;
+
+      for (let y = startY; y < endY; y += tile) {
+        for (let x = startX; x < endX; x += tile) {
+          const idx = (Math.floor(x / tile) + Math.floor(y / tile)) % GROUND_COLORS.length;
+          ctx.fillStyle = GROUND_COLORS[idx];
+          ctx.fillRect(x, y, tile, tile);
+
+          // Grass tufts
+          if ((x / tile + y / tile) % 5 === 0) {
+            ctx.fillStyle = 'rgba(80, 180, 80, 0.15)';
+            ctx.fillRect(x + 8, y + 5, 3, 6);
+            ctx.fillRect(x + 15, y + 8, 3, 6);
+          }
+
+          // Small flowers
+          if ((x / tile + y / tile) % 9 === 0) {
+            const flowerColor = FLOWER_COLORS[Math.floor((x / tile + y / tile) / 9) % FLOWER_COLORS.length];
+            ctx.fillStyle = flowerColor;
+            ctx.globalAlpha = 0.4;
+            ctx.fillRect(x + 10, y + 10, 4, 4);
+            ctx.fillRect(x + 14, y + 8, 4, 4);
+            ctx.fillRect(x + 12, y + 14, 4, 4);
+            ctx.globalAlpha = 1;
+          }
+        }
+      }
+    }
+
+    function drawDecorationsColorful() {
+      const tile = world.tile;
+      const minX = Math.floor(world.cameraX / tile) * tile - tile;
+      const minY = Math.floor(world.cameraY / tile) * tile - tile;
+      const maxX = world.cameraX + window.innerWidth + tile;
+      const maxY = world.cameraY + window.innerHeight + tile;
+
+      for (let y = minY; y < maxY; y += tile * 2) {
+        for (let x = minX; x < maxX; x += tile * 2) {
+          const hash = Math.abs(Math.sin(x * 12.9898 + y * 78.233) * 43758.5453) % 1;
+
+          if (hash > .85) {
+            // Tree
+            ctx.fillStyle = '#3a2a1a';
+            ctx.fillRect(x + 16, y + 20, 8, 16);
+            ctx.fillStyle = '#2a6a3a';
+            ctx.fillRect(x + 8, y + 6, 24, 18);
+            ctx.fillStyle = '#3a8a4a';
+            ctx.fillRect(x + 10, y + 2, 20, 12);
+          } else if (hash > .78) {
+            // Rock
+            ctx.fillStyle = '#5a5a5a';
+            ctx.fillRect(x + 12, y + 18, 16, 10);
+            ctx.fillStyle = '#6a6a6a';
+            ctx.fillRect(x + 10, y + 14, 20, 8);
+          } else if (hash > .72) {
+            // Bush
+            ctx.fillStyle = '#2a5a2a';
+            ctx.fillRect(x + 8, y + 16, 24, 12);
+            ctx.fillStyle = '#3a6a3a';
+            ctx.fillRect(x + 10, y + 12, 20, 10);
+          }
+        }
+      }
+    }
+
+    function drawDrops() {
+      for (const drop of drops) {
+        const pulse = Math.sin(world.time * 4 + drop.pulse) * 2;
+        ctx.save();
+        ctx.translate(drop.x, drop.y);
+        ctx.fillStyle = rarityColor(drop.item.rarity);
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = rarityColor(drop.item.rarity);
+        ctx.fillRect(-8 - pulse/2, -8 - pulse/2, 16 + pulse, 16 + pulse);
+        ctx.restore();
+      }
+    }
+
+    function drawEnemyPixel(enemy) {
+      ctx.save();
+      ctx.translate(enemy.x, enemy.y);
+
+      // Shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.2)';
+      ctx.beginPath();
+      ctx.ellipse(0, enemy.radius * 0.7, enemy.radius * 1.0, enemy.radius * 0.35, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (enemy.hitFlash > 0) {
+        ctx.shadowColor = '#ffffff';
+        ctx.shadowBlur = 25;
+      }
+
+      const size = enemy.radius * 2.4;
+      const sprite = enemy.sprite || ENEMY_SPRITES['Shadow Slime'];
+      const tint = enemy.hitFlash > 0 ? '#ffffff' : null;
+
+      drawPixelArt(ctx, sprite, -size/2, -size/2, size, tint);
+
+      // HP bar
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(-enemy.radius, -enemy.radius - 14, enemy.radius * 2, 4);
+      ctx.fillStyle = '#ff6b6b';
+      ctx.fillRect(-enemy.radius, -enemy.radius - 14, enemy.radius * 2 * clamp(enemy.hp / enemy.maxHp, 0, 1), 4);
+
+      ctx.restore();
+    }
+
+    function drawPlayerPixel() {
+      ctx.save();
+      ctx.translate(player.x, player.y);
+
+      if (player.invulnerability > 0 && Math.floor(world.time * 12) % 2 === 0) ctx.globalAlpha = .5;
+
+      // Shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.2)';
+      ctx.beginPath();
+      ctx.ellipse(0, 20, 20, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.rotate(player.attackAngle);
+
+      // Simple weapon
+      ctx.shadowColor = '#f5c842';
+      ctx.shadowBlur = 12;
+      ctx.fillStyle = '#c0c0c0';
+      ctx.fillRect(16, -2, 24, 4);
+      ctx.fillStyle = '#e8e8e8';
+      ctx.fillRect(36, -1, 8, 2);
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#3d2b1f';
+      ctx.fillRect(4, -3, 14, 6);
+
+      ctx.rotate(-player.attackAngle);
+
+      // Player sprite
+      const size = 34;
+      const sprite = getPlayerSprite();
+
+      if (player.critBuff > 0) {
+        ctx.shadowColor = '#ff8c00';
+        ctx.shadowBlur = 20;
+      }
+
+      drawPixelArt(ctx, sprite, -size/2, -size/2, size);
+
+      // Crit ring
+      if (player.critBuff > 0) {
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = 'rgba(255, 140, 0, 0.2)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, 22 + Math.sin(world.time * 8) * 2, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(255, 140, 0, 0.1)';
+        ctx.beginPath();
+        ctx.arc(0, 0, 26 + Math.sin(world.time * 8 + 1) * 2, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    function drawParticles() {
+      for (const p of particles) {
+        ctx.globalAlpha = clamp(p.life / p.maxLife, 0, 1);
+        ctx.fillStyle = p.color;
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 8;
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      }
+      ctx.globalAlpha = 1;
+      ctx.shadowBlur = 0;
+    }
+
+    function drawFloatingTexts() {
+      ctx.textAlign = "center";
+      ctx.font = "bold 16px 'MedievalSharp', cursive";
+
+      for (const t of floatingTexts) {
+        ctx.globalAlpha = clamp(t.life, 0, 1);
+        ctx.shadowColor = "#000";
+        ctx.shadowBlur = 12;
+        ctx.fillStyle = t.color;
+        ctx.fillText(t.text, t.x, t.y);
+      }
+      ctx.globalAlpha = 1;
+      ctx.shadowBlur = 0;
+    }
+
+    function drawMinimapColorful() {
+      const size = Math.min(150, window.innerWidth * .22);
+      const x = window.innerWidth - size - 14;
+      const y = 68;
+      const sx = size / world.width, sy = size / world.height;
+
+      ctx.save();
+      ctx.globalAlpha = .85;
+      ctx.fillStyle = 'rgba(26, 26, 46, 0.8)';
+      ctx.fillRect(x, y, size, size);
+      ctx.strokeStyle = 'rgba(255,200,100,0.1)';
+      ctx.strokeRect(x, y, size, size);
+
+      for (const enemy of enemies) {
+        ctx.fillStyle = '#ff6b6b';
+        ctx.shadowColor = '#ff6b6b';
+        ctx.shadowBlur = 4;
+        ctx.fillRect(x + enemy.x * sx - 1, y + enemy.y * sy - 1, 3, 3);
+      }
+
+      for (const drop of drops) {
+        ctx.fillStyle = rarityColor(drop.item.rarity);
+        ctx.shadowBlur = 4;
+        ctx.fillRect(x + drop.x * sx - 1, y + drop.y * sy - 1, 3, 3);
+      }
+
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = '#f5c842';
+      ctx.fillStyle = '#f5c842';
+      ctx.fillRect(x + player.x * sx - 2, y + player.y * sy - 2, 5, 5);
+      ctx.restore();
+    }
+
+    // ============================================================
+    //  SAVE / LOAD / RESET
+    // ============================================================
+    function saveGame() {
+      try {
+        localStorage.setItem(saveKey, JSON.stringify({
+          player: {
+            x: player.x, y: player.y,
+            level: player.level, xp: player.xp, xpToNext: player.xpToNext,
+            hp: player.hp, maxHp: player.maxHp,
+            mana: player.mana, maxMana: player.maxMana,
+            statPoints: player.statPoints,
+            stats: player.stats,
+            inventory: player.inventory,
+            equipment: player.equipment,
+            name: player.name,
+            class: player.class
+          }
+        }));
+      } catch(e) { console.error("Save error:", e); }
+    }
+
+    function loadGame() {
+      try {
+        const raw = localStorage.getItem(saveKey);
+        if (!raw) return false;
+        const data = JSON.parse(raw);
+        if (!data?.player) return false;
+        Object.assign(player, data.player);
+        player.cooldowns = [0,0,0,0,0];
+        player.attackCooldown = 0;
+        player.invulnerability = 0;
+        player.dashTime = 0;
+        player.critBuff = 0;
+        syncDerivedStats();
+        player.hp = clamp(player.hp, 0, player.maxHp);
+        player.mana = clamp(player.mana, 0, player.maxMana);
+        renderInventory();
+        updateHud();
+        addLog("💾 Save loaded.");
+        document.getElementById('playerNameDisplay').textContent = `⚔️ ${player.name || 'Dark Hunter'}`;
+        return true;
+      } catch(e) { console.error("Load error:", e); localStorage.removeItem(saveKey); return false; }
+    }
+
+    function resetGame() {
+      if (!confirm("Delete all progress?")) return;
+      localStorage.removeItem(saveKey);
+      goToMainMenu();
+    }
+
+    // ============================================================
+    //  PANELS
+    // ============================================================
+    function openPanel(p) { p.classList.remove("hidden"); }
+    function closePanel(p) { p.classList.add("hidden"); }
+    function togglePanel(p) { p.classList.toggle("hidden"); }
+
+    // ============================================================
+    //  INPUT SETUP
+    // ============================================================
+    function setupInput() {
+      window.addEventListener("keydown", e => {
+        const key = e.key.toLowerCase();
+        keys.add(key);
+        if (["arrowup","arrowdown","arrowleft","arrowright"," "].includes(key)) e.preventDefault();
+        if (/^[1-5]$/.test(key)) useSkill(Number(key) - 1);
+        if (key === "i") togglePanel(ui.inventoryPanel);
+        if (key === "escape") { closePanel(ui.statsPanel); closePanel(ui.inventoryPanel); closePanel(ui.menuPanel); }
+      });
+      window.addEventListener("keyup", e => keys.delete(e.key.toLowerCase()));
+
+      canvas.addEventListener("pointermove", e => {
+        if (e.pointerType !== "touch") { mouse.x = e.clientX; mouse.y = e.clientY; mouse.active = true; }
+      });
+      canvas.addEventListener("pointerdown", e => {
+        if (e.pointerType !== "touch") { mouse.down = true; mouse.x = e.clientX; mouse.y = e.clientY; mouse.active = true; }
+      });
+      window.addEventListener("pointerup", e => { if (e.pointerType !== "touch") mouse.down = false; });
+
+      document.querySelectorAll("[data-skill]").forEach(btn => {
+        btn.addEventListener("pointerdown", e => { e.preventDefault(); useSkill(Number(btn.dataset.skill)); });
+      });
+
+      document.getElementById("attackButton").addEventListener("pointerdown", e => { e.preventDefault(); performBasicAttack(); });
+
+      const jEl = document.getElementById("joystick"), stick = document.getElementById("stick");
+      jEl.addEventListener("pointerdown", e => {
+        e.preventDefault(); joystick.active = true; joystick.pointerId = e.pointerId;
+        jEl.setPointerCapture(e.pointerId);
+        updateJoystick(e);
+      });
+      jEl.addEventListener("pointermove", e => {
+        if (joystick.active && e.pointerId === joystick.pointerId) updateJoystick(e);
+      });
+      const releaseJ = e => {
+        if (e.pointerId === joystick.pointerId) {
+          joystick.active = false; joystick.pointerId = null;
+          joystick.x = 0; joystick.y = 0;
+          stick.style.transform = "translate(-50%, -50%)";
+        }
+      };
+      jEl.addEventListener("pointerup", releaseJ);
+      jEl.addEventListener("pointercancel", releaseJ);
+
+      function updateJoystick(e) {
+        const rect = jEl.getBoundingClientRect();
+        const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+        const maxD = rect.width * .34;
+        let dx = e.clientX - cx, dy = e.clientY - cy;
+        const d = Math.hypot(dx, dy);
+        if (d > maxD) { dx = dx / d * maxD; dy = dy / d * maxD; }
+        joystick.x = dx / maxD; joystick.y = dy / maxD;
+        stick.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+      }
+
+      document.getElementById("statsButton").addEventListener("click", () => togglePanel(ui.statsPanel));
+      document.getElementById("inventoryButton").addEventListener("click", () => { renderInventory(); togglePanel(ui.inventoryPanel); });
+      document.getElementById("menuButton").addEventListener("click", () => togglePanel(ui.menuPanel));
+      document.getElementById("saveButton").addEventListener("click", () => { saveGame(); showGameToast("💾 Game saved."); });
+      document.getElementById("resetButton").addEventListener("click", resetGame);
+
+      document.querySelectorAll("[data-close]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const panel = document.getElementById(btn.dataset.close);
+          if (panel) closePanel(panel);
+        });
+      });
+
+      document.querySelectorAll("[data-stat]").forEach(btn => {
+        btn.addEventListener("click", () => spendStat(btn.dataset.stat));
+      });
+
+      document.getElementById("inventoryPanel").addEventListener("click", e => {
+        const btn = e.target.closest("[data-equip]");
+        if (btn) equipItem(Number(btn.dataset.equip));
+      });
+
+      window.addEventListener("resize", resizeCanvas);
+      window.addEventListener("orientationchange", resizeCanvas);
+    }
+
+    function resizeCanvas() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(window.innerWidth * dpr);
+      canvas.height = Math.floor(window.innerHeight * dpr);
+      canvas.style.width = `${window.innerWidth}px`;
+      canvas.style.height = `${window.innerHeight}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    // ============================================================
+    //  INIT GAME
+    // ============================================================
+    function initGame() {
+      resizeCanvas();
+      setupInput();
+
+      const loaded = loadGame();
+
+      if (!loaded && !player.name) {
+        player.name = 'Dark Hunter';
+        player.class = 'warrior';
+      }
+
+      syncDerivedStats();
+      updateHud();
+      renderInventory();
+
+      if (enemies.length === 0) {
+        for (let i = 0; i < 8; i++) spawnEnemy();
+      }
+
+      addLog("⚔️ Welcome, Dark Hunter. Slay or be slain.");
+      gameLoopRunning = true;
+      lastTime = performance.now();
+      requestAnimationFrame(gameLoop);
+    }
+
+    // ============================================================
+    //  GAME LOOP
+    // ============================================================
+    function gameLoop(now) {
+      if (!gameLoopRunning) return;
+
+      const dt = Math.min((now - lastTime) / 1000, .05);
+      lastTime = now;
+
+      updatePlayer(dt);
+      updateEnemies(dt);
+      updateWorld(dt);
+      updateCamera();
+      updateHud();
+      draw();
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    // ============================================================
+    //  BOOT
+    // ============================================================
+    checkSaveData();
+    console.log('🐇 RabbitHollow: Dark Hunt - Kaion Tale Style loaded!');
+  </script>
+</body>
+</html>
