@@ -1,0 +1,5070 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  >
+
+  <meta name="theme-color" content="#080808">
+
+  <title>RabbitHollow Bros.</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #080808;
+      color: #ffffff;
+      font-family: monospace;
+      touch-action: manipulation;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    #app {
+      width: 100%;
+      height: 100%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      background: #101010;
+    }
+
+    #header {
+      min-height: 58px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #151515;
+      border-bottom: 2px solid #333333;
+    }
+
+    .logo {
+      font-size: 16px;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+
+    .version {
+      margin-top: 3px;
+      color: #777777;
+      font-size: 10px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .header-button {
+      width: 38px;
+      height: 34px;
+      border: 1px solid #444444;
+      border-radius: 6px;
+      background: #222222;
+    }
+
+    #screen {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 14px;
+    }
+
+    .view {
+      display: none;
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    .hero {
+      padding: 16px 2px 20px;
+    }
+
+    .hero-label {
+      color: #c8203f;
+      font-size: 10px;
+      font-weight: bold;
+      letter-spacing: 3px;
+    }
+
+    h1 {
+      margin: 8px 0;
+      font-size: 32px;
+      line-height: 1;
+    }
+
+    .hero-text {
+      max-width: 600px;
+      color: #888888;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .section-title {
+      margin: 8px 0;
+      color: #777777;
+      font-size: 10px;
+      letter-spacing: 2px;
+    }
+
+    .game-card {
+      width: 100%;
+      min-height: 170px;
+      padding: 18px;
+      text-align: left;
+      border: 1px solid #444444;
+      border-radius: 8px;
+      background: #171717;
+    }
+
+    .game-card:active {
+      transform: scale(0.98);
+      background: #282828;
+    }
+
+    .game-icon {
+      font-size: 34px;
+      margin-bottom: 12px;
+    }
+
+    .game-name {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .game-description {
+      max-width: 500px;
+      margin-top: 8px;
+      color: #888888;
+      font-size: 11px;
+      line-height: 1.6;
+    }
+
+    .game-meta {
+      margin-top: 14px;
+      color: #555555;
+      font-size: 9px;
+    }
+
+    .engine-info {
+      margin-top: 18px;
+      padding: 14px;
+      border: 1px solid #292929;
+      border-radius: 8px;
+      background: #111111;
+      color: #777777;
+      font-size: 10px;
+      line-height: 1.7;
+    }
+
+    #game-view {
+      max-width: 700px;
+    }
+
+    .game-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .game-title {
+      font-size: 16px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    #game-status {
+      margin-top: 3px;
+      color: #888888;
+      font-size: 10px;
+      text-align: center;
+    }
+
+    .back-button,
+    .restart-button {
+      padding: 9px 12px;
+      border: 1px solid #444444;
+      border-radius: 6px;
+      background: #202020;
+    }
+
+    #game-canvas {
+      display: block;
+      width: 100%;
+      max-height: 65vh;
+      aspect-ratio: 256 / 240;
+      background: #3d1220;
+      border: 2px solid #333333;
+      border-radius: 6px;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      touch-action: none;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .dpad {
+      position: relative;
+      width: 145px;
+      height: 145px;
+      flex: 0 0 145px;
+    }
+
+    .control {
+      position: absolute;
+      border: 1px solid #444444;
+      background: #202020;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .control.active,
+    .control:active {
+      background: #555555;
+    }
+
+    .dpad-button {
+      width: 48px;
+      height: 48px;
+      border-radius: 6px;
+    }
+
+    .up {
+      top: 0;
+      left: 48px;
+    }
+
+    .down {
+      bottom: 0;
+      left: 48px;
+    }
+
+    .left {
+      top: 48px;
+      left: 0;
+    }
+
+    .right {
+      top: 48px;
+      right: 0;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .action-button {
+      position: static;
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      font-weight: bold;
+    }
+
+    .instructions {
+      margin-top: 10px;
+      color: #666666;
+      font-size: 10px;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    @media (orientation: landscape) and (max-height: 600px) {
+      #header {
+        min-height: 44px;
+        padding: 6px 10px;
+      }
+
+      #screen {
+        padding: 8px 12px;
+      }
+
+      #game-canvas {
+        max-height: 55vh;
+      }
+
+      .controls {
+        margin-top: 6px;
+      }
+
+      .dpad {
+        transform: scale(0.75);
+        margin: -18px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="app">
+
+    <header id="header">
+
+      <div>
+        <div class="logo">
+          RABBITHOLLOW
+        </div>
+
+        <div class="version">
+          RETRO ENGINE v3.0 · GOTHIC EDITION
+        </div>
+      </div>
+
+      <div class="header-actions">
+
+        <button
+          class="header-button"
+          id="home-button"
+          type="button"
+        >
+          ⌂
+        </button>
+
+        <button
+          class="header-button"
+          id="fullscreen-button"
+          type="button"
+        >
+          ⛶
+        </button>
+
+      </div>
+
+    </header>
+
+    <main id="screen">
+
+      <section
+        id="menu-view"
+        class="view active"
+      >
+
+        <div class="hero">
+
+          <div class="hero-label">
+            RABBITHOLLOW ENTERTAINMENT SYSTEM
+          </div>
+
+          <h1>
+            RABBITHOLLOW BROS.
+          </h1>
+
+          <div class="hero-text">
+            Vlastní retro platformový engine inspirovaný
+            8bitovou érou. Žádné externí knihovny.
+            Canvas renderer, vlastní sprite systém,
+            animace, kolize, enemies, coiny a mobilní ovládání.
+          </div>
+
+        </div>
+
+        <div class="section-title">
+          SELECT GAME
+        </div>
+
+        <button
+          class="game-card"
+          id="start-game"
+          type="button"
+        >
+
+          <div class="game-icon">
+            🗡️
+          </div>
+
+          <div class="game-name">
+            RabbitHollow Bros.
+          </div>
+
+          <div class="game-description">
+            Vlastní 8bitová platformovka.
+            Sbírej coiny, přeskakuj enemies,
+            používej platformy a dostaň se na konec levelu.
+          </div>
+
+          <div class="game-meta">
+            PLATFORMER · COINS · ENEMIES · SPRITES · CAMERA
+          </div>
+
+        </button>
+
+        <div class="engine-info">
+
+          <b>RABBITHOLLOW RETRO ENGINE</b>
+
+          <br><br>
+
+          Core:
+          Game Loop · Canvas Renderer · Input Manager
+
+          <br>
+
+          Graphics:
+          SpriteSheet · SpriteAnimator · Parallax · Particles
+
+          <br>
+
+          Gameplay:
+          Physics · Gravity · Collision · Platforms
+
+          <br>
+
+          Entities:
+          Player · Enemies · Coins
+
+          <br>
+
+          Systems:
+          Camera Shake · Score · Game Over · Level Complete
+
+        </div>
+
+      </section>
+
+      <section
+        id="game-view"
+        class="view"
+      >
+
+        <div class="game-header">
+
+          <button
+            class="back-button"
+            id="back-button"
+            type="button"
+          >
+            ← MENU
+          </button>
+
+          <div>
+
+            <div
+              class="game-title"
+              id="game-title"
+            >
+              RabbitHollow Bros.
+            </div>
+
+            <div id="game-status">
+              READY
+            </div>
+
+          </div>
+
+          <button
+            class="restart-button"
+            id="restart-button"
+            type="button"
+          >
+            RESTART
+          </button>
+
+        </div>
+
+        <canvas
+          id="game-canvas"
+          width="256"
+          height="240"
+        ></canvas>
+
+        <div class="controls">
+
+          <div class="dpad">
+
+            <button
+              class="control dpad-button up"
+              data-input="up"
+              type="button"
+            >
+              ▲
+            </button>
+
+            <button
+              class="control dpad-button down"
+              data-input="down"
+              type="button"
+            >
+              ▼
+            </button>
+
+            <button
+              class="control dpad-button left"
+              data-input="left"
+              type="button"
+            >
+              ◀
+            </button>
+
+            <button
+              class="control dpad-button right"
+              data-input="right"
+              type="button"
+            >
+              ▶
+            </button>
+
+          </div>
+
+          <div class="action-buttons">
+
+            <button
+              class="control action-button"
+              data-input="b"
+              type="button"
+            >
+              B
+            </button>
+
+            <button
+              class="control action-button"
+              data-input="a"
+              type="button"
+            >
+              A
+            </button>
+
+          </div>
+
+        </div>
+
+        <div class="instructions">
+          ◀ ▶ pohyb · A / SPACE skok · B akce · ENTER restart
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <script>
+    "use strict";
+
+    const canvas =
+      document.getElementById("game-canvas");
+
+    const ctx =
+      canvas.getContext("2d");
+
+    ctx.imageSmoothingEnabled =
+      false;
+
+    const menuView =
+      document.getElementById("menu-view");
+
+    const gameView =
+      document.getElementById("game-view");
+
+    const gameTitle =
+      document.getElementById("game-title");
+
+    const gameStatus =
+      document.getElementById("game-status");
+
+    const input = {
+      up: false,
+      down: false,
+      left: false,
+      right: false,
+      a: false,
+      b: false
+    };
+
+    const keyMap = {
+      ArrowUp: "up",
+      ArrowDown: "down",
+      ArrowLeft: "left",
+      ArrowRight: "right",
+      KeyZ: "b",
+      KeyX: "a",
+      Space: "a"
+    };
+
+    class SpriteSheet {
+
+      constructor(
+        frameWidth,
+        frameHeight,
+        columns,
+        rows
+      ) {
+        this.frameWidth =
+          frameWidth;
+
+        this.frameHeight =
+          frameHeight;
+
+        this.columns =
+          columns;
+
+        this.rows =
+          rows;
+
+        this.canvas =
+          document.createElement("canvas");
+
+        this.canvas.width =
+          frameWidth *
+          columns;
+
+        this.canvas.height =
+          frameHeight *
+          rows;
+
+        this.context =
+          this.canvas.getContext("2d");
+
+        this.context.imageSmoothingEnabled =
+          false;
+      }
+
+      drawFrame(
+        frame,
+        x,
+        y,
+        scale = 1,
+        flipX = false
+      ) {
+        const sourceX =
+          (
+            frame %
+            this.columns
+          ) *
+          this.frameWidth;
+
+        const sourceY =
+          Math.floor(
+            frame /
+            this.columns
+          ) *
+          this.frameHeight;
+
+        const width =
+          this.frameWidth *
+          scale;
+
+        const height =
+          this.frameHeight *
+          scale;
+
+        ctx.save();
+
+        if (
+          flipX
+        ) {
+          ctx.translate(
+            x + width,
+            y
+          );
+
+          ctx.scale(
+            -1,
+            1
+          );
+
+          ctx.drawImage(
+            this.canvas,
+            sourceX,
+            sourceY,
+            this.frameWidth,
+            this.frameHeight,
+            0,
+            0,
+            width,
+            height
+          );
+
+        } else {
+
+          ctx.drawImage(
+            this.canvas,
+            sourceX,
+            sourceY,
+            this.frameWidth,
+            this.frameHeight,
+            x,
+            y,
+            width,
+            height
+          );
+        }
+
+        ctx.restore();
+      }
+    }
+
+    class SpriteAnimator {
+
+      constructor(
+        spriteSheet,
+        animations
+      ) {
+        this.spriteSheet =
+          spriteSheet;
+
+        this.animations =
+          animations;
+
+        this.currentAnimation =
+          "idle";
+
+        this.currentFrame =
+          0;
+
+        this.elapsed =
+          0;
+
+        this.flipX =
+          false;
+      }
+
+      setAnimation(
+        name
+      ) {
+        if (
+          !this.animations[name]
+        ) {
+          return;
+        }
+
+        if (
+          this.currentAnimation !==
+          name
+        ) {
+          this.currentAnimation =
+            name;
+
+          this.currentFrame =
+            0;
+
+          this.elapsed =
+            0;
+        }
+      }
+
+      update(
+        delta
+      ) {
+        const animation =
+          this.animations[
+            this.currentAnimation
+          ];
+
+        if (
+          !animation
+        ) {
+          return;
+        }
+
+        this.elapsed +=
+          delta;
+
+        const frameDuration =
+          1 /
+          animation.fps;
+
+        if (
+          this.elapsed >=
+          frameDuration
+        ) {
+          this.elapsed =
+            0;
+
+          this.currentFrame =
+            (
+              this.currentFrame +
+              1
+            ) %
+            animation.frames.length;
+        }
+      }
+
+      draw(
+        x,
+        y,
+        scale = 1
+      ) {
+        const animation =
+          this.animations[
+            this.currentAnimation
+          ];
+
+        if (
+          !animation
+        ) {
+          return;
+        }
+
+        const frame =
+          animation.frames[
+            this.currentFrame
+          ];
+
+        this.spriteSheet.drawFrame(
+          frame,
+          x,
+          y,
+          scale,
+          this.flipX
+        );
+      }
+    }
+
+    // ---------------------------------------------------------------
+    // Gotický rytíř: bílo-stříbrná zbroj, karmínový plášť, žhnoucí oči
+    // ---------------------------------------------------------------
+    function createRabbitSpriteSheet() {
+
+      const sheet =
+        new SpriteSheet(
+          16,
+          20,
+          8,
+          1
+        );
+
+      const sprite =
+        sheet.context;
+
+      for (
+        let frame = 0;
+        frame < 8;
+        frame++
+      ) {
+
+        const x =
+          frame *
+          16;
+
+        const legOffset =
+          frame % 2 === 0
+            ? 0
+            : 2;
+
+        const capeSway =
+          frame % 2 === 0
+            ? 0
+            : 1;
+
+        // stín pod tělem
+        sprite.fillStyle =
+          "rgba(0,0,0,0.3)";
+
+        sprite.fillRect(
+          x + 3,
+          18,
+          10,
+          2
+        );
+
+        // plášť - vzadu, tmavě karmínový
+        sprite.fillStyle =
+          "#5c0f1f";
+
+        sprite.fillRect(
+          x + 3 -
+            capeSway,
+          8,
+          4,
+          11
+        );
+
+        sprite.fillStyle =
+          "#7a1428";
+
+        sprite.fillRect(
+          x + 3 -
+            capeSway,
+          8,
+          2,
+          11
+        );
+
+        // ramenní pláty (pauldrony) - stříbrné s karmínovým lemem
+        sprite.fillStyle =
+          "#c9c9d2";
+
+        sprite.fillRect(
+          x + 3,
+          7,
+          3,
+          3
+        );
+
+        sprite.fillRect(
+          x + 10,
+          7,
+          3,
+          3
+        );
+
+        sprite.fillStyle =
+          "#9a1a2e";
+
+        sprite.fillRect(
+          x + 3,
+          9,
+          3,
+          1
+        );
+
+        sprite.fillRect(
+          x + 10,
+          9,
+          3,
+          1
+        );
+
+        // hrudní zbroj - bílo-stříbrná
+        sprite.fillStyle =
+          "#e6e6ec";
+
+        sprite.fillRect(
+          x + 5,
+          8,
+          6,
+          8
+        );
+
+        // stín na pravé straně zbroje (objem)
+        sprite.fillStyle =
+          "#b7b7c4";
+
+        sprite.fillRect(
+          x + 10,
+          8,
+          1,
+          8
+        );
+
+        // karmínový pás přes hruď
+        sprite.fillStyle =
+          "#c8203f";
+
+        sprite.fillRect(
+          x + 5,
+          11,
+          6,
+          2
+        );
+
+        sprite.fillStyle =
+          "#8a1226";
+
+        sprite.fillRect(
+          x + 5,
+          11,
+          6,
+          1
+        );
+
+        // opasek
+        sprite.fillStyle =
+          "#2a2a30";
+
+        sprite.fillRect(
+          x + 5,
+          15,
+          6,
+          1
+        );
+
+        // přilba
+        sprite.fillStyle =
+          "#dcdce4";
+
+        sprite.fillRect(
+          x + 5,
+          1,
+          6,
+          7
+        );
+
+        sprite.fillStyle =
+          "#b7b7c4";
+
+        sprite.fillRect(
+          x + 5,
+          6,
+          6,
+          2
+        );
+
+        // hřeben přilby - karmínové pero
+        sprite.fillStyle =
+          "#c8203f";
+
+        sprite.fillRect(
+          x + 7,
+          0,
+          2,
+          2
+        );
+
+        // hledí / štěrbina - černá s žhnoucíma očima
+        sprite.fillStyle =
+          "#111114";
+
+        sprite.fillRect(
+          x + 6,
+          4,
+          4,
+          2
+        );
+
+        sprite.fillStyle =
+          "#ff2d4d";
+
+        sprite.fillRect(
+          x + 7,
+          4,
+          1,
+          1
+        );
+
+        sprite.fillRect(
+          x + 9,
+          4,
+          1,
+          1
+        );
+
+        // nohy / holenní pláty - tmavá ocel
+        sprite.fillStyle =
+          "#3a3a42";
+
+        sprite.fillRect(
+          x + 4 + legOffset,
+          16,
+          4,
+          3
+        );
+
+        sprite.fillRect(
+          x + 9 - legOffset,
+          16,
+          4,
+          3
+        );
+
+        sprite.fillStyle =
+          "#1c1c22";
+
+        sprite.fillRect(
+          x + 4 + legOffset,
+          18,
+          4,
+          1
+        );
+
+        sprite.fillRect(
+          x + 9 - legOffset,
+          18,
+          4,
+          1
+        );
+
+        // meč po boku - záblesk čepele
+        sprite.fillStyle =
+          "#cfe8ff";
+
+        sprite.fillRect(
+          x + 12,
+          9,
+          1,
+          8
+        );
+
+        sprite.fillStyle =
+          "#6fb8ff";
+
+        sprite.fillRect(
+          x + 12,
+          9,
+          1,
+          2
+        );
+      }
+
+      return sheet;
+    }
+
+    const rabbitSheet =
+      createRabbitSpriteSheet();
+
+    const rabbitAnimations = {
+
+      idle: {
+        frames: [0, 1],
+        fps: 3
+      },
+
+      run: {
+        frames: [2, 3, 4, 5],
+        fps: 10
+      },
+
+      jump: {
+        frames: [6],
+        fps: 1
+      },
+
+      fall: {
+        frames: [7],
+        fps: 1
+      }
+
+    };
+
+    // ---------------------------------------------------------------
+    // Deterministický "šum" pro dekorace pozadí (bez Math.random driftu)
+    // ---------------------------------------------------------------
+    function pseudoNoise(
+      seed
+    ) {
+      const value =
+        Math.sin(
+          seed *
+          12.9898
+        ) *
+        43758.5453;
+
+      return value -
+        Math.floor(
+          value
+        );
+    }
+
+    // ---------------------------------------------------------------
+    // CRT scanline vzor - vytvořen jednou, pak recyklován (výkon)
+    // ---------------------------------------------------------------
+    let scanlinePatternCache =
+      null;
+
+    function getScanlinePattern() {
+
+      if (
+        scanlinePatternCache
+      ) {
+        return scanlinePatternCache;
+      }
+
+      const tile =
+        document.createElement(
+          "canvas"
+        );
+
+      tile.width = 1;
+
+      tile.height = 3;
+
+      const tileContext =
+        tile.getContext(
+          "2d"
+        );
+
+      tileContext.fillStyle =
+        "rgba(0,0,0,0)";
+
+      tileContext.fillRect(
+        0,
+        0,
+        1,
+        3
+      );
+
+      tileContext.fillStyle =
+        "rgba(0,0,0,0.16)";
+
+      tileContext.fillRect(
+        0,
+        0,
+        1,
+        1
+      );
+
+      scanlinePatternCache =
+        ctx.createPattern(
+          tile,
+          "repeat"
+        );
+
+      return scanlinePatternCache;
+    }
+
+    // ---------------------------------------------------------------
+    // Jednoduchý částicový systém (jiskry z coinů, prach z enemies)
+    // ---------------------------------------------------------------
+    const Particles = {
+
+      list: [],
+
+      spawnBurst(
+        x,
+        y,
+        count,
+        colors,
+        speed,
+        gravity
+      ) {
+
+        for (
+          let i = 0;
+          i < count;
+          i++
+        ) {
+
+          const angle =
+            (
+              Math.PI *
+              2 *
+              i
+            ) /
+            count +
+            Math.random() *
+            0.6;
+
+          const velocity =
+            speed *
+            (
+              0.5 +
+              Math.random() *
+              0.6
+            );
+
+          this.list.push({
+            x,
+            y,
+            vx:
+              Math.cos(
+                angle
+              ) *
+              velocity,
+            vy:
+              Math.sin(
+                angle
+              ) *
+              velocity -
+              speed *
+              0.3,
+            life: 0.5,
+            maxLife: 0.5,
+            gravity,
+            color:
+              colors[
+                i %
+                colors.length
+              ],
+            size:
+              1 +
+              Math.random() *
+              1.5
+          });
+        }
+      },
+
+      update(
+        delta
+      ) {
+
+        for (
+          let i =
+            this.list.length -
+            1;
+          i >= 0;
+          i--
+        ) {
+
+          const particle =
+            this.list[i];
+
+          particle.life -=
+            delta;
+
+          if (
+            particle.life <=
+            0
+          ) {
+
+            this.list.splice(
+              i,
+              1
+            );
+
+            continue;
+          }
+
+          particle.vy +=
+            particle.gravity *
+            delta;
+
+          particle.x +=
+            particle.vx *
+            delta;
+
+          particle.y +=
+            particle.vy *
+            delta;
+        }
+      },
+
+      render() {
+
+        for (
+          const particle of
+          this.list
+        ) {
+
+          const alpha =
+            Math.max(
+              0,
+              particle.life /
+              particle.maxLife
+            );
+
+          ctx.globalAlpha =
+            alpha;
+
+          ctx.fillStyle =
+            particle.color;
+
+          ctx.fillRect(
+            particle.x -
+              particle.size /
+              2,
+            particle.y -
+              particle.size /
+              2,
+            particle.size,
+            particle.size
+          );
+        }
+
+        ctx.globalAlpha =
+          1;
+      },
+
+      clear() {
+
+        this.list.length =
+          0;
+      }
+    };
+
+    const Engine = {
+
+      running: false,
+
+      lastTime: 0,
+
+      animationFrame: 0,
+
+      start() {
+
+        this.stop();
+
+        Game.init();
+
+        this.running =
+          true;
+
+        this.lastTime =
+          performance.now();
+
+        this.animationFrame =
+          requestAnimationFrame(
+            this.loop.bind(this)
+          );
+      },
+
+      stop() {
+
+        this.running =
+          false;
+
+        if (
+          this.animationFrame
+        ) {
+          cancelAnimationFrame(
+            this.animationFrame
+          );
+
+          this.animationFrame =
+            0;
+        }
+      },
+
+      loop(
+        time
+      ) {
+
+        if (
+          !this.running
+        ) {
+          return;
+        }
+
+        const delta =
+          Math.min(
+            (
+              time -
+              this.lastTime
+            ) /
+            1000,
+            0.05
+          );
+
+        this.lastTime =
+          time;
+
+        try {
+
+          Game.update(
+            delta
+          );
+
+          Particles.update(
+            delta
+          );
+
+          Game.render();
+
+        } catch (
+          error
+        ) {
+
+          console.error(
+            error
+          );
+
+          this.stop();
+
+          gameStatus.textContent =
+            "ENGINE ERROR";
+        }
+
+        this.animationFrame =
+          requestAnimationFrame(
+            this.loop.bind(this)
+          );
+      }
+    };
+
+    const Game = {
+
+      player: null,
+
+      animator: null,
+
+      platforms: [],
+
+      coins: [],
+
+      enemies: [],
+
+      cameraX: 0,
+
+      velocityY: 0,
+
+      grounded: false,
+
+      score: 0,
+
+      coinsCollected: 0,
+
+      gameOver: false,
+
+      won: false,
+
+      worldWidth: 1800,
+
+      shake: 0,
+
+      hitFlash: 0,
+
+      landingSquash: 0,
+
+      dustTimer: 0,
+
+      birds: [],
+
+      stars: [],
+
+      fireflies: [],
+
+      elapsedTime: 0,
+
+      currentNightFactor: 0,
+
+      init() {
+
+        this.player = {
+          x: 30,
+          y: 180,
+          width: 16,
+          height: 20
+        };
+
+        this.animator =
+          new SpriteAnimator(
+            rabbitSheet,
+            rabbitAnimations
+          );
+
+        this.cameraX =
+          0;
+
+        this.velocityY =
+          0;
+
+        this.grounded =
+          false;
+
+        this.score =
+          0;
+
+        this.coinsCollected =
+          0;
+
+        this.gameOver =
+          false;
+
+        this.won =
+          false;
+
+        this.shake =
+          0;
+
+        this.hitFlash =
+          0;
+
+        this.landingSquash =
+          0;
+
+        this.dustTimer =
+          0;
+
+        this.birds = [
+          {
+            offset: 10,
+            speed: 26,
+            y: 24
+          },
+          {
+            offset: 110,
+            speed: 19,
+            y: 42
+          },
+          {
+            offset: 200,
+            speed: 31,
+            y: 18
+          },
+          {
+            offset: 250,
+            speed: 22,
+            y: 55
+          }
+        ];
+
+        this.elapsedTime =
+          0;
+
+        this.stars = [];
+
+        for (
+          let i = 0;
+          i < 46;
+          i++
+        ) {
+
+          this.stars.push({
+            x:
+              pseudoNoise(
+                i * 3.31
+              ) *
+              256,
+            y:
+              pseudoNoise(
+                i * 7.77
+              ) *
+              130,
+            phase:
+              pseudoNoise(
+                i * 1.13
+              ) *
+              10,
+            size:
+              pseudoNoise(
+                i * 5.5
+              ) >
+              0.85
+                ? 1.6
+                : 1
+          });
+        }
+
+        this.fireflies = [];
+
+        for (
+          let i = 0;
+          i < 7;
+          i++
+        ) {
+
+          this.fireflies.push({
+            baseX:
+              pseudoNoise(
+                i * 9.1
+              ) *
+              this.worldWidth,
+            baseY:
+              150 +
+              pseudoNoise(
+                i * 4.4
+              ) *
+              45,
+            phase:
+              i * 1.7,
+            speed:
+              0.6 +
+              pseudoNoise(
+                i * 2.2
+              ) *
+              0.8
+          });
+        }
+
+        Particles.clear();
+
+        this.platforms = [
+
+          {
+            x: 0,
+            y: 210,
+            width: 320,
+            height: 30
+          },
+
+          {
+            x: 350,
+            y: 210,
+            width: 280,
+            height: 30
+          },
+
+          {
+            x: 660,
+            y: 210,
+            width: 300,
+            height: 30
+          },
+
+          {
+            x: 990,
+            y: 210,
+            width: 300,
+            height: 30
+          },
+
+          {
+            x: 1320,
+            y: 210,
+            width: 480,
+            height: 30
+          },
+
+          {
+            x: 95,
+            y: 185,
+            width: 75,
+            height: 8
+          },
+
+          {
+            x: 215,
+            y: 175,
+            width: 75,
+            height: 8
+          },
+
+          {
+            x: 405,
+            y: 185,
+            width: 80,
+            height: 8
+          },
+
+          {
+            x: 525,
+            y: 175,
+            width: 75,
+            height: 8
+          },
+
+          {
+            x: 715,
+            y: 185,
+            width: 80,
+            height: 8
+          },
+
+          {
+            x: 835,
+            y: 175,
+            width: 80,
+            height: 8
+          },
+
+          {
+            x: 1045,
+            y: 185,
+            width: 80,
+            height: 8
+          },
+
+          {
+            x: 1165,
+            y: 175,
+            width: 80,
+            height: 8
+          },
+
+          {
+            x: 1370,
+            y: 185,
+            width: 80,
+            height: 8
+          },
+
+          {
+            x: 1500,
+            y: 175,
+            width: 80,
+            height: 8
+          },
+
+          {
+            x: 1630,
+            y: 185,
+            width: 80,
+            height: 8
+          }
+
+        ];
+
+        this.coins = [
+
+          {
+            x: 132,
+            y: 168,
+            collected: false
+          },
+
+          {
+            x: 252,
+            y: 158,
+            collected: false
+          },
+
+          {
+            x: 445,
+            y: 168,
+            collected: false
+          },
+
+          {
+            x: 562,
+            y: 158,
+            collected: false
+          },
+
+          {
+            x: 755,
+            y: 168,
+            collected: false
+          },
+
+          {
+            x: 875,
+            y: 158,
+            collected: false
+          },
+
+          {
+            x: 1085,
+            y: 168,
+            collected: false
+          },
+
+          {
+            x: 1205,
+            y: 158,
+            collected: false
+          },
+
+          {
+            x: 1410,
+            y: 168,
+            collected: false
+          },
+
+          {
+            x: 1540,
+            y: 158,
+            collected: false
+          },
+
+          {
+            x: 1670,
+            y: 168,
+            collected: false
+          }
+
+        ];
+
+        this.enemies = [
+
+          {
+            x: 250,
+            y: 190,
+            width: 18,
+            height: 20,
+            minX: 180,
+            maxX: 300,
+            direction: 1,
+            speed: 25,
+            alive: true
+          },
+
+          {
+            x: 480,
+            y: 190,
+            width: 18,
+            height: 20,
+            minX: 370,
+            maxX: 600,
+            direction: -1,
+            speed: 30,
+            alive: true
+          },
+
+          {
+            x: 770,
+            y: 190,
+            width: 18,
+            height: 20,
+            minX: 680,
+            maxX: 940,
+            direction: 1,
+            speed: 32,
+            alive: true
+          },
+
+          {
+            x: 1090,
+            y: 190,
+            width: 18,
+            height: 20,
+            minX: 1000,
+            maxX: 1270,
+            direction: -1,
+            speed: 30,
+            alive: true
+          },
+
+          {
+            x: 1430,
+            y: 190,
+            width: 18,
+            height: 20,
+            minX: 1330,
+            maxX: 1780,
+            direction: 1,
+            speed: 35,
+            alive: true
+          }
+
+        ];
+
+        gameStatus.textContent =
+          "COINS 0 · SCORE 0";
+      },
+
+      update(
+        delta
+      ) {
+
+        this.elapsedTime +=
+          delta;
+
+        if (
+          this.shake >
+          0
+        ) {
+
+          this.shake =
+            Math.max(
+              0,
+              this.shake -
+              delta * 4
+            );
+        }
+
+        if (
+          this.hitFlash >
+          0
+        ) {
+
+          this.hitFlash =
+            Math.max(
+              0,
+              this.hitFlash -
+              delta * 2.2
+            );
+        }
+
+        this.landingSquash +=
+          (
+            0 -
+            this.landingSquash
+          ) *
+          Math.min(
+            1,
+            delta * 10
+          );
+
+        if (
+          this.dustTimer >
+          0
+        ) {
+
+          this.dustTimer -=
+            delta;
+        }
+
+        if (
+          this.gameOver ||
+          this.won
+        ) {
+
+          this.animator.setAnimation(
+            "idle"
+          );
+
+          this.animator.update(
+            delta
+          );
+
+          return;
+        }
+
+        const previousY =
+          this.player.y;
+
+        const previousBottom =
+          previousY +
+          this.player.height;
+
+        const moveSpeed =
+          105;
+
+        if (
+          input.left
+        ) {
+
+          this.player.x -=
+            moveSpeed *
+            delta;
+
+          this.animator.flipX =
+            true;
+        }
+
+        if (
+          input.right
+        ) {
+
+          this.player.x +=
+            moveSpeed *
+            delta;
+
+          this.animator.flipX =
+            false;
+        }
+
+        this.player.x =
+          Math.max(
+            0,
+            Math.min(
+              this.worldWidth -
+                this.player.width,
+              this.player.x
+            )
+          );
+
+        if (
+          (
+            input.a ||
+            input.up
+          ) &&
+          this.grounded
+        ) {
+
+          this.velocityY =
+            -190;
+
+          this.grounded =
+            false;
+
+          this.landingSquash =
+            -0.6;
+
+          this.spawnDust(
+            this.player.x +
+              this.player.width /
+              2,
+            this.player.y +
+              this.player.height,
+            4,
+            30,
+            70
+          );
+
+          input.a =
+            false;
+
+          input.up =
+            false;
+        }
+
+        this.velocityY +=
+          500 *
+          delta;
+
+        this.player.y +=
+          this.velocityY *
+          delta;
+
+        const currentBottom =
+          this.player.y +
+          this.player.height;
+
+        const wasGrounded =
+          this.grounded;
+
+        this.grounded =
+          false;
+
+        for (
+          const platform of
+          this.platforms
+        ) {
+
+          const horizontalCollision =
+            this.player.x +
+              this.player.width >
+              platform.x &&
+            this.player.x <
+              platform.x +
+              platform.width;
+
+          const crossedTop =
+            previousBottom <=
+              platform.y &&
+            currentBottom >=
+              platform.y;
+
+          if (
+            this.velocityY >= 0 &&
+            horizontalCollision &&
+            crossedTop
+          ) {
+
+            this.player.y =
+              platform.y -
+              this.player.height;
+
+            this.velocityY =
+              0;
+
+            this.grounded =
+              true;
+
+            break;
+          }
+        }
+
+        if (
+          !wasGrounded &&
+          this.grounded
+        ) {
+
+          this.landingSquash =
+            1;
+
+          this.spawnDust(
+            this.player.x +
+              this.player.width /
+              2,
+            this.player.y +
+              this.player.height,
+            7,
+            42,
+            95
+          );
+        }
+
+        if (
+          this.grounded
+        ) {
+
+          if (
+            input.left ||
+            input.right
+          ) {
+
+            this.animator.setAnimation(
+              "run"
+            );
+
+            if (
+              this.dustTimer <=
+              0
+            ) {
+
+              this.spawnDust(
+                this.player.x +
+                  (
+                    this.animator.flipX
+                      ? this.player.width
+                      : 0
+                  ),
+                this.player.y +
+                  this.player.height,
+                1,
+                14,
+                40
+              );
+
+              this.dustTimer =
+                0.14;
+            }
+
+          } else {
+
+            this.animator.setAnimation(
+              "idle"
+            );
+          }
+
+        } else {
+
+          if (
+            this.velocityY < 0
+          ) {
+
+            this.animator.setAnimation(
+              "jump"
+            );
+
+          } else {
+
+            this.animator.setAnimation(
+              "fall"
+            );
+          }
+        }
+
+        this.animator.update(
+          delta
+        );
+
+        this.updateEnemies(
+          delta
+        );
+
+        this.collectCoins();
+
+        this.checkEnemyCollisions();
+
+        if (
+          this.player.y >
+          280
+        ) {
+
+          if (
+            !this.gameOver
+          ) {
+
+            this.shake =
+              0.4;
+          }
+
+          this.gameOver =
+            true;
+
+          gameStatus.textContent =
+            "GAME OVER · PRESS A";
+        }
+
+        if (
+          this.player.x >
+          this.worldWidth -
+          80
+        ) {
+
+          this.won =
+            true;
+
+          gameStatus.textContent =
+            "LEVEL COMPLETE";
+        }
+
+        const targetCamera =
+          this.player.x -
+          90;
+
+        this.cameraX +=
+          (
+            targetCamera -
+            this.cameraX
+          ) *
+          Math.min(
+            1,
+            delta * 6
+          );
+
+        this.cameraX =
+          Math.max(
+            0,
+            Math.min(
+              this.worldWidth -
+                256,
+              this.cameraX
+            )
+          );
+
+        gameStatus.textContent =
+          "COINS " +
+          this.coinsCollected +
+          " · SCORE " +
+          this.score;
+      },
+
+      updateEnemies(
+        delta
+      ) {
+
+        for (
+          const enemy of
+          this.enemies
+        ) {
+
+          if (
+            !enemy.alive
+          ) {
+            continue;
+          }
+
+          enemy.x +=
+            enemy.direction *
+            enemy.speed *
+            delta;
+
+          if (
+            enemy.x <=
+            enemy.minX
+          ) {
+
+            enemy.x =
+              enemy.minX;
+
+            enemy.direction =
+              1;
+          }
+
+          if (
+            enemy.x >=
+            enemy.maxX
+          ) {
+
+            enemy.x =
+              enemy.maxX;
+
+            enemy.direction =
+              -1;
+          }
+        }
+      },
+
+      collectCoins() {
+
+        for (
+          const coin of
+          this.coins
+        ) {
+
+          if (
+            coin.collected
+          ) {
+            continue;
+          }
+
+          const centerX =
+            this.player.x +
+            this.player.width /
+            2;
+
+          const centerY =
+            this.player.y +
+            this.player.height /
+            2;
+
+          const distance =
+            Math.hypot(
+              centerX -
+                coin.x,
+              centerY -
+                coin.y
+            );
+
+          if (
+            distance <
+            16
+          ) {
+
+            coin.collected =
+              true;
+
+            this.coinsCollected++;
+
+            this.score +=
+              100;
+
+            Particles.spawnBurst(
+              coin.x,
+              coin.y,
+              8,
+              [
+                "#ff3d5f",
+                "#c8203f",
+                "#ffd9e0"
+              ],
+              55,
+              80
+            );
+          }
+        }
+      },
+
+      spawnDust(
+        x,
+        y,
+        count,
+        speed,
+        gravity
+      ) {
+
+        Particles.spawnBurst(
+          x,
+          y,
+          count,
+          [
+            "#e8d9c0",
+            "#d8c3a5",
+            "#c9b28f"
+          ],
+          speed,
+          gravity
+        );
+      },
+
+      checkEnemyCollisions() {
+
+        for (
+          const enemy of
+          this.enemies
+        ) {
+
+          if (
+            !enemy.alive
+          ) {
+            continue;
+          }
+
+          const collision =
+            this.player.x <
+              enemy.x +
+              enemy.width &&
+            this.player.x +
+              this.player.width >
+              enemy.x &&
+            this.player.y <
+              enemy.y +
+              enemy.height &&
+            this.player.y +
+              this.player.height >
+              enemy.y;
+
+          if (
+            !collision
+          ) {
+            continue;
+          }
+
+          const playerBottom =
+            this.player.y +
+            this.player.height;
+
+          const enemyTop =
+            enemy.y;
+
+          if (
+            this.velocityY > 0 &&
+            playerBottom <
+              enemyTop +
+              12
+          ) {
+
+            enemy.alive =
+              false;
+
+            this.velocityY =
+              -125;
+
+            this.score +=
+              200;
+
+            Particles.spawnBurst(
+              enemy.x +
+                enemy.width /
+                2,
+              enemy.y +
+                enemy.height /
+                2,
+              10,
+              [
+                "#7f5539",
+                "#b08968",
+                "#5c3d2e"
+              ],
+              45,
+              60
+            );
+
+          } else {
+
+            if (
+              !this.gameOver
+            ) {
+
+              this.shake =
+                0.3;
+
+              this.hitFlash =
+                0.55;
+            }
+
+            this.gameOver =
+              true;
+
+            gameStatus.textContent =
+              "HIT · PRESS A";
+          }
+        }
+      },
+
+      render() {
+
+        ctx.save();
+
+        if (
+          this.shake >
+          0
+        ) {
+
+          const magnitude =
+            this.shake *
+            4;
+
+          ctx.translate(
+            (
+              Math.random() -
+              0.5
+            ) *
+            magnitude,
+            (
+              Math.random() -
+              0.5
+            ) *
+            magnitude
+          );
+        }
+
+        this.drawBackground();
+
+        ctx.save();
+
+        ctx.translate(
+          -Math.floor(
+            this.cameraX
+          ),
+          0
+        );
+
+        this.drawPlatforms();
+
+        this.drawGoalFlag();
+
+        this.drawCoins();
+
+        this.drawEnemies();
+
+        this.drawPlayerShadow();
+
+        if (
+          this.currentNightFactor >
+          0.35
+        ) {
+
+          this.drawPlayerGlow();
+        }
+
+        const squashY =
+          1 -
+          this.landingSquash *
+          0.3;
+
+        const squashX =
+          1 +
+          this.landingSquash *
+          0.15;
+
+        const anchorX =
+          this.player.x +
+          this.player.width /
+          2;
+
+        const anchorY =
+          this.player.y +
+          this.player.height;
+
+        ctx.save();
+
+        ctx.translate(
+          anchorX,
+          anchorY
+        );
+
+        ctx.scale(
+          squashX,
+          squashY
+        );
+
+        ctx.translate(
+          -anchorX,
+          -anchorY
+        );
+
+        this.animator.draw(
+          this.player.x,
+          this.player.y
+        );
+
+        ctx.restore();
+
+        Particles.render();
+
+        ctx.restore();
+
+        ctx.restore();
+
+        this.drawHitFlash();
+
+        this.drawVignette();
+
+        this.drawHud();
+
+        this.drawScanlines();
+
+        if (
+          this.gameOver
+        ) {
+
+          drawOverlay(
+            "GAME OVER",
+            "PRESS A TO RESTART"
+          );
+        }
+
+        if (
+          this.won
+        ) {
+
+          drawOverlay(
+            "LEVEL COMPLETE",
+            "PRESS A TO PLAY AGAIN"
+          );
+        }
+      },
+
+      drawPlayerShadow() {
+
+        const groundY =
+          this.player.y +
+          this.player.height +
+          1;
+
+        const shadowScale =
+          Math.max(
+            0.3,
+            1 -
+            (
+              280 -
+              groundY
+            ) /
+            280
+          );
+
+        ctx.fillStyle =
+          "rgba(0,0,0,0.22)";
+
+        ctx.beginPath();
+
+        ctx.ellipse(
+          this.player.x +
+            this.player.width /
+            2,
+          Math.min(
+            groundY,
+            230
+          ),
+          7 *
+            shadowScale,
+          2.4 *
+            shadowScale,
+          0,
+          0,
+          Math.PI *
+            2
+        );
+
+        ctx.fill();
+      },
+
+      drawPlayerGlow() {
+
+        const centerX =
+          this.player.x +
+          this.player.width /
+          2;
+
+        const centerY =
+          this.player.y +
+          this.player.height /
+          2;
+
+        ctx.save();
+
+        ctx.globalCompositeOperation =
+          "lighter";
+
+        const glow =
+          ctx.createRadialGradient(
+            centerX,
+            centerY,
+            1,
+            centerX,
+            centerY,
+            26
+          );
+
+        glow.addColorStop(
+          0,
+          "rgba(255,236,180," +
+            (
+              this.currentNightFactor *
+              0.35
+            ) +
+            ")"
+        );
+
+        glow.addColorStop(
+          1,
+          "rgba(255,236,180,0)"
+        );
+
+        ctx.fillStyle =
+          glow;
+
+        ctx.fillRect(
+          centerX - 26,
+          centerY - 26,
+          52,
+          52
+        );
+
+        ctx.restore();
+      },
+
+      drawBackground() {
+
+        const DAY_CYCLE =
+          48;
+
+        const phase =
+          (
+            this.elapsedTime %
+            DAY_CYCLE
+          ) /
+          DAY_CYCLE;
+
+        const altitude =
+          Math.sin(
+            phase *
+            Math.PI *
+            2
+          );
+
+        const nightFactor =
+          Math.max(
+            0,
+            Math.min(
+              1,
+              -altitude *
+              1.35
+            )
+          );
+
+        const horizonGlow =
+          Math.max(
+            0,
+            1 -
+            Math.abs(
+              altitude
+            ) *
+            1.8
+          );
+
+        this.currentNightFactor =
+          nightFactor;
+
+        // -------------------------------------------------
+        // Nebe - základní denní gradient
+        // -------------------------------------------------
+        const skyGradient =
+          ctx.createLinearGradient(
+            0,
+            0,
+            0,
+            240
+          );
+
+        skyGradient.addColorStop(
+          0,
+          "#3d0f1f"
+        );
+
+        skyGradient.addColorStop(
+          0.55,
+          "#a83450"
+        );
+
+        skyGradient.addColorStop(
+          1,
+          "#e8a8ac"
+        );
+
+        ctx.fillStyle =
+          skyGradient;
+
+        ctx.fillRect(
+          0,
+          0,
+          256,
+          240
+        );
+
+        // -------------------------------------------------
+        // Noční ztmavení oblohy
+        // -------------------------------------------------
+        if (
+          nightFactor >
+          0.01
+        ) {
+
+          ctx.fillStyle =
+            "rgba(10,4,16," +
+            (
+              nightFactor *
+              0.82
+            ) +
+            ")";
+
+          ctx.fillRect(
+            0,
+            0,
+            256,
+            240
+          );
+        }
+
+        // -------------------------------------------------
+        // Teplá záře úsvitu / soumraku u horizontu
+        // -------------------------------------------------
+        if (
+          horizonGlow >
+          0.02
+        ) {
+
+          const glowGradient =
+            ctx.createLinearGradient(
+              0,
+              90,
+              0,
+              210
+            );
+
+          glowGradient.addColorStop(
+            0,
+            "rgba(255,150,90,0)"
+          );
+
+          glowGradient.addColorStop(
+            1,
+            "rgba(255,120,70," +
+              (
+                horizonGlow *
+                0.55
+              ) +
+              ")"
+          );
+
+          ctx.fillStyle =
+            glowGradient;
+
+          ctx.fillRect(
+            0,
+            0,
+            256,
+            240
+          );
+        }
+
+        this.drawStars(
+          nightFactor
+        );
+
+        this.drawCelestialBodies(
+          phase,
+          altitude,
+          horizonGlow
+        );
+
+        // -------------------------------------------------
+        // Vzdálené věže zámku (parallax 0.1)
+        // -------------------------------------------------
+        ctx.fillStyle =
+          "#3a1a2a";
+
+        for (
+          let i = -1;
+          i < 6;
+          i++
+        ) {
+
+          const baseX =
+            i * 140 -
+            (
+              this.cameraX *
+              0.1
+            ) %
+            140;
+
+          ctx.beginPath();
+
+          ctx.moveTo(
+            baseX,
+            150
+          );
+
+          ctx.lineTo(
+            baseX + 25,
+            110
+          );
+
+          ctx.lineTo(
+            baseX + 32,
+            125
+          );
+
+          ctx.lineTo(
+            baseX + 42,
+            88
+          );
+
+          ctx.lineTo(
+            baseX + 50,
+            118
+          );
+
+          ctx.lineTo(
+            baseX + 70,
+            100
+          );
+
+          ctx.lineTo(
+            baseX + 92,
+            122
+          );
+
+          ctx.lineTo(
+            baseX + 100,
+            95
+          );
+
+          ctx.lineTo(
+            baseX + 112,
+            128
+          );
+
+          ctx.lineTo(
+            baseX + 140,
+            150
+          );
+
+          ctx.closePath();
+
+          ctx.fill();
+        }
+
+        // -------------------------------------------------
+        // Bližší hradby a věže trosek (parallax 0.2)
+        // -------------------------------------------------
+        ctx.fillStyle =
+          "#2b1220";
+
+        for (
+          let i = -1;
+          i < 5;
+          i++
+        ) {
+
+          const baseX =
+            i * 180 -
+            (
+              this.cameraX *
+              0.2
+            ) %
+            180;
+
+          ctx.fillRect(
+            baseX,
+            140,
+            180,
+            20
+          );
+
+          ctx.fillRect(
+            baseX + 20,
+            108,
+            14,
+            32
+          );
+
+          ctx.beginPath();
+
+          ctx.moveTo(
+            baseX + 18,
+            108
+          );
+
+          ctx.lineTo(
+            baseX + 27,
+            92
+          );
+
+          ctx.lineTo(
+            baseX + 36,
+            108
+          );
+
+          ctx.closePath();
+
+          ctx.fill();
+
+          ctx.fillRect(
+            baseX + 90,
+            118,
+            12,
+            22
+          );
+
+          ctx.beginPath();
+
+          ctx.moveTo(
+            baseX + 88,
+            118
+          );
+
+          ctx.lineTo(
+            baseX + 96,
+            104
+          );
+
+          ctx.lineTo(
+            baseX + 104,
+            118
+          );
+
+          ctx.closePath();
+
+          ctx.fill();
+
+          ctx.fillRect(
+            baseX + 140,
+            122,
+            10,
+            18
+          );
+        }
+
+        if (
+          nightFactor <
+          0.55
+        ) {
+
+          this.drawBirds();
+        }
+
+        // -------------------------------------------------
+        // Mraky (parallax 0.25) - více kruhů pro měkký tvar
+        // -------------------------------------------------
+        ctx.fillStyle =
+          "rgba(190,120,140,0.5)";
+
+        for (
+          let x = 10;
+          x < this.worldWidth + 256;
+          x += 95
+        ) {
+
+          const screenX =
+            x -
+            this.cameraX *
+            0.25;
+
+          if (
+            screenX <
+              -40 ||
+            screenX >
+              280
+          ) {
+            continue;
+          }
+
+          const bob =
+            pseudoNoise(
+              x
+            ) *
+            10;
+
+          const cloudY =
+            30 +
+            bob;
+
+          ctx.beginPath();
+
+          ctx.arc(
+            screenX,
+            cloudY,
+            9,
+            0,
+            Math.PI *
+              2
+          );
+
+          ctx.arc(
+            screenX + 10,
+            cloudY - 4,
+            11,
+            0,
+            Math.PI *
+              2
+          );
+
+          ctx.arc(
+            screenX + 22,
+            cloudY,
+            8,
+            0,
+            Math.PI *
+              2
+          );
+
+          ctx.arc(
+            screenX + 10,
+            cloudY + 4,
+            9,
+            0,
+            Math.PI *
+              2
+          );
+
+          ctx.fill();
+        }
+
+        // -------------------------------------------------
+        // Vzdálené mrtvé křoví (parallax 0.5)
+        // -------------------------------------------------
+        ctx.fillStyle =
+          "#160a12";
+
+        for (
+          let x = 0;
+          x < this.worldWidth;
+          x += 80
+        ) {
+
+          const screenX =
+            x -
+            this.cameraX *
+            0.5;
+
+          if (
+            screenX <
+              -60 ||
+            screenX >
+              300
+          ) {
+            continue;
+          }
+
+          ctx.beginPath();
+
+          ctx.arc(
+            screenX + 12,
+            195,
+            16,
+            Math.PI,
+            0
+          );
+
+          ctx.fill();
+
+          ctx.fillRect(
+            screenX - 4,
+            188,
+            32,
+            22
+          );
+
+          // trnité výhonky
+          for (
+            let t = 0;
+            t < 3;
+            t++
+          ) {
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+              screenX +
+                4 +
+                t * 8,
+              189
+            );
+
+            ctx.lineTo(
+              screenX +
+                6 +
+                t * 8,
+              178
+            );
+
+            ctx.lineTo(
+              screenX +
+                8 +
+                t * 8,
+              189
+            );
+
+            ctx.closePath();
+
+            ctx.fill();
+          }
+        }
+
+        // -------------------------------------------------
+        // Bližší mrtvé stromy a trnové keře (parallax 0.5)
+        // -------------------------------------------------
+        for (
+          let x = 20;
+          x < this.worldWidth;
+          x += 80
+        ) {
+
+          const screenX =
+            x -
+            this.cameraX *
+            0.5;
+
+          if (
+            screenX <
+              -60 ||
+            screenX >
+              300
+          ) {
+            continue;
+          }
+
+          const isTree =
+            pseudoNoise(
+              x * 0.7
+            ) >
+            0.72;
+
+          if (
+            isTree
+          ) {
+
+            ctx.strokeStyle =
+              "#0d0508";
+
+            ctx.lineWidth =
+              2;
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+              screenX + 10,
+              201
+            );
+
+            ctx.lineTo(
+              screenX + 9,
+              178
+            );
+
+            ctx.lineTo(
+              screenX + 2,
+              166
+            );
+
+            ctx.moveTo(
+              screenX + 9,
+              183
+            );
+
+            ctx.lineTo(
+              screenX + 17,
+              170
+            );
+
+            ctx.moveTo(
+              screenX + 9,
+              178
+            );
+
+            ctx.lineTo(
+              screenX + 5,
+              160
+            );
+
+            ctx.stroke();
+
+            ctx.lineWidth =
+              1;
+
+          } else {
+
+            ctx.fillStyle =
+              "#1f0e18";
+
+            ctx.beginPath();
+
+            ctx.arc(
+              screenX + 15,
+              190,
+              14,
+              Math.PI,
+              0
+            );
+
+            ctx.fill();
+
+            ctx.fillRect(
+              screenX,
+              183,
+              30,
+              18
+            );
+
+            for (
+              let t = 0;
+              t < 3;
+              t++
+            ) {
+
+              ctx.beginPath();
+
+              ctx.moveTo(
+                screenX +
+                  5 +
+                  t * 9,
+                184
+              );
+
+              ctx.lineTo(
+                screenX +
+                  7 +
+                  t * 9,
+                172
+              );
+
+              ctx.lineTo(
+                screenX +
+                  9 +
+                  t * 9,
+                184
+              );
+
+              ctx.closePath();
+
+              ctx.fill();
+            }
+
+            // řeřavá jiskra v popelu
+            const emberSeed =
+              pseudoNoise(
+                x * 3.1
+              );
+
+            if (
+              emberSeed >
+              0.6
+            ) {
+
+              ctx.save();
+
+              ctx.shadowBlur =
+                4;
+
+              ctx.shadowColor =
+                "rgba(255,80,50,0.9)";
+
+              ctx.fillStyle =
+                "#ff4d33";
+
+              ctx.fillRect(
+                screenX + 6,
+                186,
+                2,
+                2
+              );
+
+              ctx.fillRect(
+                screenX + 20,
+                189,
+                2,
+                2
+              );
+
+              ctx.restore();
+            }
+          }
+        }
+
+        // -------------------------------------------------
+        // Sjednocené noční ztmavení krajiny (hory/kopce/keře)
+        // -------------------------------------------------
+        if (
+          nightFactor >
+          0.02
+        ) {
+
+          ctx.fillStyle =
+            "rgba(4,6,20," +
+            (
+              nightFactor *
+              0.5
+            ) +
+            ")";
+
+          ctx.fillRect(
+            0,
+            80,
+            256,
+            160
+          );
+        }
+
+        if (
+          nightFactor >
+          0.4
+        ) {
+
+          this.drawFireflies(
+            nightFactor
+          );
+        }
+      },
+
+      drawStars(
+        nightFactor
+      ) {
+
+        if (
+          nightFactor <=
+          0.02
+        ) {
+          return;
+        }
+
+        const time =
+          performance.now() /
+          1000;
+
+        ctx.fillStyle =
+          "#ffffff";
+
+        for (
+          const star of
+          this.stars
+        ) {
+
+          const twinkle =
+            0.5 +
+            0.5 *
+            Math.sin(
+              time * 2 +
+              star.phase
+            );
+
+          ctx.globalAlpha =
+            nightFactor *
+            twinkle;
+
+          ctx.fillRect(
+            star.x,
+            star.y,
+            star.size,
+            star.size
+          );
+        }
+
+        ctx.globalAlpha =
+          1;
+      },
+
+      drawCelestialBodies(
+        phase,
+        altitude,
+        horizonGlow
+      ) {
+
+        const sunX =
+          20 +
+          phase *
+          216;
+
+        const sunY =
+          178 -
+          altitude *
+          140;
+
+        const sunAlpha =
+          Math.max(
+            0,
+            Math.min(
+              1,
+              altitude *
+              4 +
+              0.2
+            )
+          );
+
+        if (
+          sunAlpha >
+          0.02
+        ) {
+
+          const sunGlow =
+            ctx.createRadialGradient(
+              sunX,
+              sunY,
+              2,
+              sunX,
+              sunY,
+              28
+            );
+
+          sunGlow.addColorStop(
+            0,
+            "rgba(255,224,150," +
+              (
+                sunAlpha *
+                0.9
+              ) +
+              ")"
+          );
+
+          sunGlow.addColorStop(
+            1,
+            "rgba(255,224,150,0)"
+          );
+
+          ctx.fillStyle =
+            sunGlow;
+
+          ctx.fillRect(
+            sunX - 28,
+            sunY - 28,
+            56,
+            56
+          );
+
+          ctx.globalAlpha =
+            sunAlpha;
+
+          ctx.fillStyle =
+            "#f2e0b8";
+
+          ctx.beginPath();
+
+          ctx.arc(
+            sunX,
+            sunY,
+            14,
+            0,
+            Math.PI *
+              2
+          );
+
+          ctx.fill();
+
+          ctx.fillStyle =
+            "rgba(190,150,120,0.35)";
+
+          ctx.beginPath();
+
+          ctx.arc(
+            sunX - 4,
+            sunY + 3,
+            3.5,
+            0,
+            Math.PI *
+              2
+          );
+
+          ctx.fill();
+
+          ctx.beginPath();
+
+          ctx.arc(
+            sunX + 5,
+            sunY - 2,
+            2.5,
+            0,
+            Math.PI *
+              2
+          );
+
+          ctx.fill();
+
+          ctx.globalAlpha =
+            1;
+
+          if (
+            horizonGlow >
+            0.35
+          ) {
+
+            this.drawLightRays(
+              sunX,
+              sunY,
+              horizonGlow *
+                sunAlpha *
+                0.3
+            );
+          }
+        }
+
+        const moonPhase =
+          (
+            phase +
+            0.5
+          ) %
+          1;
+
+        const moonAltitude =
+          -altitude;
+
+        const moonX =
+          20 +
+          moonPhase *
+          216;
+
+        const moonY =
+          178 -
+          moonAltitude *
+          140;
+
+        const moonAlpha =
+          Math.max(
+            0,
+            Math.min(
+              1,
+              moonAltitude *
+              4 +
+              0.15
+            )
+          );
+
+        if (
+          moonAlpha >
+          0.02
+        ) {
+
+          const moonGlow =
+            ctx.createRadialGradient(
+              moonX,
+              moonY,
+              1,
+              moonX,
+              moonY,
+              20
+            );
+
+          moonGlow.addColorStop(
+            0,
+            "rgba(230,210,170," +
+              (
+                moonAlpha *
+                0.55
+              ) +
+              ")"
+          );
+
+          moonGlow.addColorStop(
+            1,
+            "rgba(230,210,170,0)"
+          );
+
+          ctx.fillStyle =
+            moonGlow;
+
+          ctx.fillRect(
+            moonX - 20,
+            moonY - 20,
+            40,
+            40
+          );
+
+          ctx.globalAlpha =
+            moonAlpha;
+
+          ctx.fillStyle =
+            "#e6d3a3";
+
+          ctx.beginPath();
+
+          ctx.arc(
+            moonX,
+            moonY,
+            9,
+            0,
+            Math.PI *
+              2
+          );
+
+          ctx.fill();
+
+          ctx.fillStyle =
+            "rgba(150,110,90,0.4)";
+
+          ctx.beginPath();
+
+          ctx.arc(
+            moonX - 2,
+            moonY - 1,
+            1.4,
+            0,
+            Math.PI *
+              2
+          );
+
+          ctx.fill();
+
+          ctx.beginPath();
+
+          ctx.arc(
+            moonX + 2,
+            moonY + 2,
+            1,
+            0,
+            Math.PI *
+              2
+          );
+
+          ctx.fill();
+
+          ctx.globalAlpha =
+            1;
+        }
+      },
+
+      drawLightRays(
+        x,
+        y,
+        alpha
+      ) {
+
+        if (
+          alpha <=
+          0.01
+        ) {
+          return;
+        }
+
+        const time =
+          performance.now() /
+          1000;
+
+        ctx.save();
+
+        ctx.globalCompositeOperation =
+          "lighter";
+
+        ctx.translate(
+          x,
+          y
+        );
+
+        ctx.rotate(
+          time *
+          0.06
+        );
+
+        const rayCount = 6;
+
+        for (
+          let i = 0;
+          i < rayCount;
+          i++
+        ) {
+
+          const angle =
+            (
+              Math.PI *
+              2 *
+              i
+            ) /
+            rayCount;
+
+          ctx.save();
+
+          ctx.rotate(
+            angle
+          );
+
+          const rayGradient =
+            ctx.createLinearGradient(
+              0,
+              0,
+              0,
+              150
+            );
+
+          rayGradient.addColorStop(
+            0,
+            "rgba(255,220,160," +
+              alpha +
+              ")"
+          );
+
+          rayGradient.addColorStop(
+            1,
+            "rgba(255,220,160,0)"
+          );
+
+          ctx.fillStyle =
+            rayGradient;
+
+          ctx.beginPath();
+
+          ctx.moveTo(
+            -6,
+            0
+          );
+
+          ctx.lineTo(
+            6,
+            0
+          );
+
+          ctx.lineTo(
+            2,
+            150
+          );
+
+          ctx.lineTo(
+            -2,
+            150
+          );
+
+          ctx.closePath();
+
+          ctx.fill();
+
+          ctx.restore();
+        }
+
+        ctx.restore();
+      },
+
+      drawFireflies(
+        nightFactor
+      ) {
+
+        const time =
+          performance.now() /
+          1000;
+
+        ctx.save();
+
+        ctx.globalCompositeOperation =
+          "lighter";
+
+        for (
+          const fly of
+          this.fireflies
+        ) {
+
+          const worldX =
+            fly.baseX +
+            Math.sin(
+              time *
+              fly.speed +
+              fly.phase
+            ) *
+            22;
+
+          const worldY =
+            fly.baseY +
+            Math.cos(
+              time *
+              fly.speed *
+              0.8 +
+              fly.phase
+            ) *
+            14;
+
+          const screenX =
+            worldX -
+            this.cameraX;
+
+          if (
+            screenX <
+              -10 ||
+            screenX >
+              266
+          ) {
+            continue;
+          }
+
+          const glowAlpha =
+            nightFactor *
+            (
+              0.4 +
+              0.6 *
+              Math.max(
+                0,
+                Math.sin(
+                  time * 4 +
+                  fly.phase
+                )
+              )
+            );
+
+          const glow =
+            ctx.createRadialGradient(
+              screenX,
+              worldY,
+              0,
+              screenX,
+              worldY,
+              5
+            );
+
+          glow.addColorStop(
+            0,
+            "rgba(255,90,50," +
+              glowAlpha +
+              ")"
+          );
+
+          glow.addColorStop(
+            1,
+            "rgba(255,90,50,0)"
+          );
+
+          ctx.fillStyle =
+            glow;
+
+          ctx.fillRect(
+            screenX - 5,
+            worldY - 5,
+            10,
+            10
+          );
+        }
+
+        ctx.restore();
+      },
+
+      drawPlatforms() {
+
+        for (
+          const platform of
+          this.platforms
+        ) {
+
+          const dirtGradient =
+            ctx.createLinearGradient(
+              0,
+              platform.y,
+              0,
+              platform.y +
+                platform.height
+            );
+
+          dirtGradient.addColorStop(
+            0,
+            "#4a3244"
+          );
+
+          dirtGradient.addColorStop(
+            1,
+            "#170d18"
+          );
+
+          ctx.fillStyle =
+            dirtGradient;
+
+          ctx.fillRect(
+            platform.x,
+            platform.y,
+            platform.width,
+            platform.height
+          );
+
+          // texturové tečky v kameni
+          ctx.fillStyle =
+            "rgba(0,0,0,0.25)";
+
+          for (
+            let dotX =
+              platform.x + 4;
+            dotX <
+              platform.x +
+              platform.width;
+            dotX += 9
+          ) {
+
+            const dotSeed =
+              pseudoNoise(
+                dotX
+              );
+
+            ctx.fillRect(
+              dotX,
+              platform.y +
+                6 +
+                dotSeed *
+                (
+                  platform.height -
+                  10
+                ),
+              2,
+              2
+            );
+          }
+
+          // spečená krusta navrchu
+          ctx.fillStyle =
+            "#2a1622";
+
+          ctx.fillRect(
+            platform.x,
+            platform.y,
+            platform.width,
+            4
+          );
+
+          ctx.fillStyle =
+            "#5c3a52";
+
+          ctx.fillRect(
+            platform.x,
+            platform.y,
+            platform.width,
+            2
+          );
+
+          // trnité výhonky
+          ctx.fillStyle =
+            "#1a0e16";
+
+          for (
+            let tuftX =
+              platform.x + 3;
+            tuftX <
+              platform.x +
+              platform.width -
+              3;
+            tuftX += 11
+          ) {
+
+            const tuftSeed =
+              pseudoNoise(
+                tuftX * 1.7
+              );
+
+            const tuftHeight =
+              2 +
+              tuftSeed *
+              3;
+
+            ctx.fillRect(
+              tuftX,
+              platform.y -
+                tuftHeight +
+                1,
+              1,
+              tuftHeight
+            );
+
+            ctx.fillRect(
+              tuftX + 2,
+              platform.y -
+                tuftHeight * 0.7 +
+                1,
+              1,
+              tuftHeight *
+                0.7
+            );
+          }
+        }
+      },
+
+      drawCoins() {
+
+        for (
+          const coin of
+          this.coins
+        ) {
+
+          if (
+            coin.collected
+          ) {
+            continue;
+          }
+
+          const time =
+            performance.now();
+
+          const pulse =
+            Math.sin(
+              time /
+              150
+            ) *
+            2;
+
+          const spin =
+            Math.abs(
+              Math.sin(
+                time /
+                220
+              )
+            );
+
+          const radiusX =
+            Math.max(
+              1.5,
+              5 *
+              spin
+            );
+
+          const coinGradient =
+            ctx.createRadialGradient(
+              coin.x - 1,
+              coin.y +
+                pulse -
+                1,
+              0.5,
+              coin.x,
+              coin.y +
+                pulse,
+              5
+            );
+
+          coinGradient.addColorStop(
+            0,
+            "#ffd9e0"
+          );
+
+          coinGradient.addColorStop(
+            0.6,
+            "#ff3d5f"
+          );
+
+          coinGradient.addColorStop(
+            1,
+            "#5c0f2a"
+          );
+
+          ctx.fillStyle =
+            coinGradient;
+
+          ctx.shadowBlur =
+            9;
+
+          ctx.shadowColor =
+            "rgba(255,61,95,0.85)";
+
+          ctx.beginPath();
+
+          ctx.ellipse(
+            coin.x,
+            coin.y +
+              pulse,
+            radiusX,
+            5,
+            0,
+            0,
+            Math.PI *
+              2
+          );
+
+          ctx.fill();
+
+          ctx.shadowBlur =
+            0;
+
+          ctx.strokeStyle =
+            "#8a1030";
+
+          ctx.lineWidth =
+            0.6;
+
+          ctx.stroke();
+
+          ctx.fillStyle =
+            "rgba(255,255,255,0.85)";
+
+          ctx.fillRect(
+            coin.x -
+              radiusX * 0.3,
+            coin.y -
+              3 +
+              pulse,
+            Math.max(
+              0.6,
+              radiusX *
+              0.3
+            ),
+            6
+          );
+        }
+      },
+
+      drawEnemies() {
+
+        for (
+          const enemy of
+          this.enemies
+        ) {
+
+          if (
+            !enemy.alive
+          ) {
+            continue;
+          }
+
+          // stín
+          ctx.fillStyle =
+            "rgba(0,0,0,0.2)";
+
+          ctx.beginPath();
+
+          ctx.ellipse(
+            enemy.x +
+              enemy.width /
+              2,
+            enemy.y +
+              enemy.height +
+              1,
+            8,
+            2,
+            0,
+            0,
+            Math.PI *
+              2
+          );
+
+          ctx.fill();
+
+          // tělo - gradient
+          const bodyGradient =
+            ctx.createLinearGradient(
+              enemy.x,
+              enemy.y,
+              enemy.x,
+              enemy.y +
+                enemy.height
+            );
+
+          bodyGradient.addColorStop(
+            0,
+            "#3a1f38"
+          );
+
+          bodyGradient.addColorStop(
+            1,
+            "#12081a"
+          );
+
+          ctx.fillStyle =
+            bodyGradient;
+
+          ctx.fillRect(
+            enemy.x,
+            enemy.y + 5,
+            enemy.width,
+            15
+          );
+
+          // hlava
+          ctx.fillStyle =
+            "#4a2a48";
+
+          ctx.fillRect(
+            enemy.x + 2,
+            enemy.y,
+            14,
+            10
+          );
+
+          // bříško
+          ctx.fillStyle =
+            "#241428";
+
+          ctx.fillRect(
+            enemy.x + 4,
+            enemy.y + 9,
+            10,
+            9
+          );
+
+          // obočí (naštvaný výraz)
+          ctx.fillStyle =
+            "#0c0510";
+
+          ctx.fillRect(
+            enemy.x + 3,
+            enemy.y + 3,
+            4,
+            1
+          );
+
+          ctx.fillRect(
+            enemy.x + 11,
+            enemy.y + 3,
+            4,
+            1
+          );
+
+          // žhnoucí oči
+          ctx.save();
+
+          ctx.shadowBlur =
+            5;
+
+          ctx.shadowColor =
+            "rgba(255,40,60,0.9)";
+
+          ctx.fillStyle =
+            "#ff2838";
+
+          ctx.fillRect(
+            enemy.x + 4,
+            enemy.y + 5,
+            2,
+            2
+          );
+
+          ctx.fillRect(
+            enemy.x + 12,
+            enemy.y + 5,
+            2,
+            2
+          );
+
+          ctx.restore();
+
+          ctx.fillStyle =
+            "#ffb3bd";
+
+          ctx.fillRect(
+            enemy.x + 4,
+            enemy.y + 5,
+            1,
+            1
+          );
+
+          ctx.fillRect(
+            enemy.x + 12,
+            enemy.y + 5,
+            1,
+            1
+          );
+
+          // nohy
+          ctx.fillStyle =
+            "#100816";
+
+          ctx.fillRect(
+            enemy.x + 1,
+            enemy.y + 18,
+            5,
+            2
+          );
+
+          ctx.fillRect(
+            enemy.x + 12,
+            enemy.y + 18,
+            5,
+            2
+          );
+        }
+      },
+
+      drawBirds() {
+
+        const time =
+          performance.now() /
+          1000;
+
+        ctx.strokeStyle =
+          "rgba(10,4,10,0.75)";
+
+        ctx.lineWidth =
+          1.2;
+
+        for (
+          const bird of
+          this.birds
+        ) {
+
+          const cycle =
+            296;
+
+          const x =
+            (
+              (
+                time *
+                bird.speed +
+                bird.offset
+              ) %
+              cycle
+            ) -
+            20;
+
+          const y =
+            bird.y +
+            Math.sin(
+              time * 1.5 +
+              bird.offset
+            ) *
+            3;
+
+          const flap =
+            Math.sin(
+              time * 9 +
+              bird.offset
+            ) *
+            3;
+
+          ctx.beginPath();
+
+          ctx.moveTo(
+            x - 4,
+            y +
+              flap
+          );
+
+          ctx.lineTo(
+            x,
+            y
+          );
+
+          ctx.lineTo(
+            x + 4,
+            y +
+              flap
+          );
+
+          ctx.stroke();
+        }
+      },
+
+      drawGoalFlag() {
+
+        const poleX =
+          this.worldWidth -
+          40;
+
+        const poleTop =
+          160;
+
+        const poleBottom =
+          210;
+
+        ctx.fillStyle =
+          "#2a2028";
+
+        ctx.fillRect(
+          poleX,
+          poleTop,
+          2,
+          poleBottom -
+            poleTop
+        );
+
+        ctx.fillStyle =
+          "#4a3a48";
+
+        ctx.beginPath();
+
+        ctx.arc(
+          poleX + 1,
+          poleTop,
+          2.5,
+          0,
+          Math.PI *
+            2
+        );
+
+        ctx.fill();
+
+        const wave =
+          Math.sin(
+            performance.now() /
+            180
+          ) *
+          3;
+
+        ctx.fillStyle =
+          this.won
+            ? "#e8c468"
+            : "#8a1226";
+
+        ctx.shadowBlur =
+          6;
+
+        ctx.shadowColor =
+          this.won
+            ? "rgba(232,196,104,0.8)"
+            : "rgba(138,18,38,0.8)";
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+          poleX + 2,
+          poleTop + 3
+        );
+
+        ctx.lineTo(
+          poleX + 18 +
+            wave,
+          poleTop + 8
+        );
+
+        ctx.lineTo(
+          poleX + 2,
+          poleTop + 13
+        );
+
+        ctx.closePath();
+
+        ctx.fill();
+
+        ctx.shadowBlur =
+          0;
+      },
+
+      drawHitFlash() {
+
+        if (
+          this.hitFlash <=
+          0
+        ) {
+          return;
+        }
+
+        ctx.fillStyle =
+          "rgba(220,30,30," +
+          (
+            this.hitFlash *
+            0.45
+          ) +
+          ")";
+
+        ctx.fillRect(
+          0,
+          0,
+          256,
+          240
+        );
+      },
+
+      drawVignette() {
+
+        const vignette =
+          ctx.createRadialGradient(
+            128,
+            120,
+            70,
+            128,
+            120,
+            175
+          );
+
+        vignette.addColorStop(
+          0,
+          "rgba(0,0,0,0)"
+        );
+
+        vignette.addColorStop(
+          1,
+          "rgba(0,0,0,0.38)"
+        );
+
+        ctx.fillStyle =
+          vignette;
+
+        ctx.fillRect(
+          0,
+          0,
+          256,
+          240
+        );
+      },
+
+      drawHud() {
+
+        ctx.fillStyle =
+          "rgba(10,10,10,0.45)";
+
+        ctx.fillRect(
+          6,
+          6,
+          92,
+          16
+        );
+
+        const coinGradient =
+          ctx.createRadialGradient(
+            17,
+            14,
+            0.5,
+            17,
+            14,
+            5
+          );
+
+        coinGradient.addColorStop(
+          0,
+          "#ffd9e0"
+        );
+
+        coinGradient.addColorStop(
+          1,
+          "#8a1030"
+        );
+
+        ctx.fillStyle =
+          coinGradient;
+
+        ctx.beginPath();
+
+        ctx.arc(
+          17,
+          14,
+          5,
+          0,
+          Math.PI *
+            2
+        );
+
+        ctx.fill();
+
+        ctx.fillStyle =
+          "#ffffff";
+
+        ctx.font =
+          "10px monospace";
+
+        ctx.textAlign =
+          "left";
+
+        ctx.fillText(
+          "x " +
+            this.coinsCollected,
+          25,
+          17
+        );
+
+        ctx.fillText(
+          "SCORE " +
+            this.score,
+          55,
+          17
+        );
+
+        const barWidth = 92;
+
+        const progress =
+          Math.max(
+            0,
+            Math.min(
+              1,
+              this.player.x /
+              this.worldWidth
+            )
+          );
+
+        ctx.fillStyle =
+          "rgba(10,10,10,0.45)";
+
+        ctx.fillRect(
+          158,
+          6,
+          barWidth,
+          10
+        );
+
+        ctx.fillStyle =
+          "#c8203f";
+
+        ctx.fillRect(
+          159,
+          7,
+          Math.max(
+            0,
+            (
+              barWidth -
+              2
+            ) *
+            progress
+          ),
+          8
+        );
+
+        ctx.strokeStyle =
+          "rgba(255,255,255,0.4)";
+
+        ctx.lineWidth =
+          0.6;
+
+        ctx.strokeRect(
+          158,
+          6,
+          barWidth,
+          10
+        );
+      },
+
+      drawScanlines() {
+
+        ctx.save();
+
+        ctx.fillStyle =
+          getScanlinePattern();
+
+        ctx.fillRect(
+          0,
+          0,
+          256,
+          240
+        );
+
+        ctx.restore();
+      }
+    };
+
+    function drawOverlay(
+      title,
+      subtitle
+    ) {
+
+      ctx.fillStyle =
+        "rgba(0, 0, 0, 0.75)";
+
+      ctx.fillRect(
+        0,
+        0,
+        256,
+        240
+      );
+
+      ctx.fillStyle =
+        "#ffffff";
+
+      ctx.textAlign =
+        "center";
+
+      ctx.font =
+        "bold 18px monospace";
+
+      ctx.globalCompositeOperation =
+        "lighter";
+
+      ctx.fillStyle =
+        "rgba(255,60,60,0.65)";
+
+      ctx.fillText(
+        title,
+        126,
+        105
+      );
+
+      ctx.fillStyle =
+        "rgba(60,180,255,0.65)";
+
+      ctx.fillText(
+        title,
+        130,
+        105
+      );
+
+      ctx.globalCompositeOperation =
+        "source-over";
+
+      ctx.fillStyle =
+        "#ffffff";
+
+      ctx.fillText(
+        title,
+        128,
+        105
+      );
+
+      ctx.font =
+        "10px monospace";
+
+      ctx.fillText(
+        subtitle,
+        128,
+        125
+      );
+    }
+
+    function clearInput() {
+
+      Object.keys(
+        input
+      ).forEach(
+        key => {
+          input[key] =
+            false;
+        }
+      );
+
+      document
+        .querySelectorAll(
+          "[data-input]"
+        )
+        .forEach(
+          button => {
+            button.classList.remove(
+              "active"
+            );
+          }
+        );
+    }
+
+    function showMenu() {
+
+      Engine.stop();
+
+      gameView.classList.remove(
+        "active"
+      );
+
+      menuView.classList.add(
+        "active"
+      );
+
+      clearInput();
+    }
+
+    function startGame() {
+
+      menuView.classList.remove(
+        "active"
+      );
+
+      gameView.classList.add(
+        "active"
+      );
+
+      clearInput();
+
+      Engine.start();
+    }
+
+    document
+      .getElementById(
+        "start-game"
+      )
+      .addEventListener(
+        "click",
+        startGame
+      );
+
+    document
+      .getElementById(
+        "back-button"
+      )
+      .addEventListener(
+        "click",
+        showMenu
+      );
+
+    document
+      .getElementById(
+        "home-button"
+      )
+      .addEventListener(
+        "click",
+        showMenu
+      );
+
+    document
+      .getElementById(
+        "restart-button"
+      )
+      .addEventListener(
+        "click",
+        () => {
+          Engine.start();
+        }
+      );
+
+    document
+      .getElementById(
+        "fullscreen-button"
+      )
+      .addEventListener(
+        "click",
+        async () => {
+
+          try {
+
+            if (
+              document
+                .documentElement
+                .requestFullscreen
+            ) {
+
+              await document
+                .documentElement
+                .requestFullscreen();
+            }
+
+          } catch (
+            error
+          ) {
+
+            console.error(
+              error
+            );
+          }
+        }
+      );
+
+    document
+      .querySelectorAll(
+        "[data-input]"
+      )
+      .forEach(
+        button => {
+
+          const key =
+            button.dataset.input;
+
+          button.addEventListener(
+            "pointerdown",
+            event => {
+
+              event.preventDefault();
+
+              button.setPointerCapture(
+                event.pointerId
+              );
+
+              input[key] =
+                true;
+
+              button.classList.add(
+                "active"
+              );
+            }
+          );
+
+          button.addEventListener(
+            "pointerup",
+            event => {
+
+              event.preventDefault();
+
+              input[key] =
+                false;
+
+              button.classList.remove(
+                "active"
+              );
+            }
+          );
+
+          button.addEventListener(
+            "pointercancel",
+            () => {
+
+              input[key] =
+                false;
+
+              button.classList.remove(
+                "active"
+              );
+            }
+          );
+        }
+      );
+
+    document.addEventListener(
+      "keydown",
+      event => {
+
+        const key =
+          keyMap[
+            event.code
+          ];
+
+        if (
+          !key
+        ) {
+          return;
+        }
+
+        event.preventDefault();
+
+        input[key] =
+          true;
+
+        if (
+          (
+            Game.gameOver ||
+            Game.won
+          ) &&
+          key === "a"
+        ) {
+
+          Engine.start();
+        }
+      }
+    );
+
+    document.addEventListener(
+      "keyup",
+      event => {
+
+        const key =
+          keyMap[
+            event.code
+          ];
+
+        if (
+          !key
+        ) {
+          return;
+        }
+
+        event.preventDefault();
+
+        input[key] =
+          false;
+      }
+    );
+
+    window.addEventListener(
+      "blur",
+      clearInput
+    );
+
+    document.addEventListener(
+      "visibilitychange",
+      () => {
+
+        if (
+          document.hidden
+        ) {
+          clearInput();
+        }
+      }
+    );
+  </script>
+
+</body>
+</html>
