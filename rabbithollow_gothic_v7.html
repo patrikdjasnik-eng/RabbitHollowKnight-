@@ -1,0 +1,8299 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  >
+
+  <meta name="theme-color" content="#080808">
+
+  <title>RabbitHollow Knight.</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #080808;
+      color: #ffffff;
+      font-family: monospace;
+      touch-action: manipulation;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    #app {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(
+          ellipse at 50% -10%,
+          #3d1220 0%,
+          #170a10 45%,
+          #0a0508 100%
+        );
+      overflow: hidden;
+    }
+
+    #loading-screen {
+      position: absolute;
+      inset: 0;
+      z-index: 500;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 22px;
+      background: radial-gradient(ellipse at 50% 35%, #101c44 0%, #0a1330 55%, #060a1c 100%);
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+    }
+
+    #loading-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .loading-logo {
+      width: 148px;
+      height: 148px;
+      image-rendering: -webkit-optimize-contrast;
+      filter: drop-shadow(0 0 18px rgba(255, 143, 163, 0.35));
+      animation: loadingFloat 2.4s ease-in-out infinite;
+    }
+
+    @keyframes loadingFloat {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .loading-name {
+      font-family: monospace;
+      text-align: center;
+      line-height: 1.1;
+    }
+
+    .loading-name .r1 {
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 20px;
+      letter-spacing: 1px;
+    }
+
+    .loading-name .r2 {
+      color: #ff8fa3;
+      font-weight: 700;
+      font-size: 20px;
+      letter-spacing: 1px;
+    }
+
+    .loading-name .r3 {
+      display: block;
+      margin-top: 4px;
+      color: #7d89b0;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    .loading-carrots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .loading-carrots .carrot-slot {
+      font-size: 20px;
+      opacity: 0.18;
+      filter: grayscale(1);
+      transform: scale(0.75) rotate(-90deg);
+      transition: opacity 0.25s ease, filter 0.25s ease, transform 0.25s ease;
+    }
+
+    .loading-carrots .carrot-slot.lit {
+      opacity: 1;
+      filter: grayscale(0) drop-shadow(0 0 5px rgba(255, 160, 60, 0.7));
+      transform: scale(1) rotate(-90deg);
+    }
+
+    .loading-status {
+      font-family: monospace;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      color: #9aa4c8;
+      min-height: 14px;
+    }
+
+    .loading-status b {
+      color: #ff8fa3;
+    }
+
+    #app::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.18) 0px,
+        rgba(0, 0, 0, 0.18) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+      z-index: 50;
+    }
+
+    #header {
+      min-height: 58px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(180deg, #1c0b12, #120810);
+      border-bottom: 2px solid #4a1526;
+    }
+
+    .logo {
+      font-size: 16px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      color: #ffe3e8;
+      text-shadow:
+        1px 0 rgba(255, 60, 60, 0.55),
+        -1px 0 rgba(60, 180, 255, 0.45);
+    }
+
+    .version {
+      margin-top: 3px;
+      color: #a3717f;
+      font-size: 10px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .header-button {
+      width: 38px;
+      height: 34px;
+      border: 1px solid #5c2233;
+      border-radius: 6px;
+      background: #24101a;
+      color: #ffd9e0;
+    }
+
+    #screen {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .view {
+      display: none;
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    #boot-view {
+      position: absolute;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(
+        ellipse at 50% 40%,
+        #2a0f18 0%,
+        #12070c 55%,
+        #060305 100%
+      );
+      opacity: 1;
+      transition: opacity 0.5s ease;
+    }
+
+    #boot-view.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .boot-icon {
+      font-size: 46px;
+      animation: boot-float 2.4s ease-in-out infinite;
+    }
+
+    .boot-title {
+      margin-top: 14px;
+      font-size: 28px;
+      font-weight: bold;
+      letter-spacing: 4px;
+      color: #ffe3e8;
+      animation: boot-flicker 2.6s infinite;
+      text-shadow:
+        2px 0 rgba(255, 61, 95, 0.65),
+        -2px 0 rgba(60, 180, 255, 0.55);
+    }
+
+    .boot-subtitle {
+      margin-top: 6px;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: #a3717f;
+    }
+
+    .boot-bar-track {
+      margin-top: 28px;
+      width: 180px;
+      height: 4px;
+      border: 1px solid #4a1c2a;
+      background: #1a0c12;
+      overflow: hidden;
+    }
+
+    .boot-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #c8203f, #ff8fa3);
+      animation: boot-fill 1.7s ease-out forwards;
+    }
+
+    .boot-hint {
+      margin-top: 18px;
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: #6b4048;
+      animation: boot-pulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes boot-float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    @keyframes boot-flicker {
+      0%, 100% { opacity: 1; }
+      42% { opacity: 1; }
+      44% { opacity: 0.4; }
+      46% { opacity: 1; }
+      88% { opacity: 1; }
+      90% { opacity: 0.5; }
+      92% { opacity: 1; }
+    }
+
+    @keyframes boot-fill {
+      from { width: 0%; }
+      to { width: 100%; }
+    }
+
+    @keyframes boot-pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+    .hero {
+      padding: 16px 2px 20px;
+    }
+
+    .hero-label {
+      color: #c8203f;
+      font-size: 10px;
+      font-weight: bold;
+      letter-spacing: 3px;
+    }
+
+    h1 {
+      margin: 8px 0;
+      font-size: 32px;
+      line-height: 1;
+      color: #ffe3e8;
+      text-shadow:
+        2px 0 rgba(255, 61, 95, 0.6),
+        -2px 0 rgba(60, 180, 255, 0.5);
+    }
+
+    .hero-text {
+      max-width: 600px;
+      color: #b98a95;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .section-title {
+      margin: 8px 0;
+      color: #a3717f;
+      font-size: 10px;
+      letter-spacing: 2px;
+    }
+
+    .game-card {
+      width: 100%;
+      min-height: 170px;
+      padding: 18px;
+      text-align: left;
+      border: 1px solid #4a1c2a;
+      border-radius: 8px;
+      background: linear-gradient(160deg, #201019, #140a10);
+      box-shadow: 0 0 0 rgba(200, 32, 63, 0);
+      transition: box-shadow 0.15s;
+    }
+
+    .game-card:active {
+      transform: scale(0.98);
+      background: linear-gradient(160deg, #341521, #1c0d15);
+      box-shadow: 0 0 14px rgba(200, 32, 63, 0.35);
+    }
+
+    .game-icon {
+      font-size: 34px;
+      margin-bottom: 12px;
+    }
+
+    .game-name {
+      font-size: 18px;
+      font-weight: bold;
+      color: #ffd9e0;
+    }
+
+    .game-description {
+      max-width: 500px;
+      margin-top: 8px;
+      color: #a3717f;
+      font-size: 11px;
+      line-height: 1.6;
+    }
+
+    .game-meta {
+      margin-top: 14px;
+      color: #c8203f;
+      font-size: 9px;
+      letter-spacing: 1px;
+    }
+
+    .engine-info {
+      margin-top: 18px;
+      padding: 14px;
+      border: 1px solid #3a1620;
+      border-radius: 8px;
+      background: #12080d;
+      color: #a3717f;
+      font-size: 10px;
+      line-height: 1.7;
+    }
+
+    #game-view {
+      max-width: 700px;
+    }
+
+    .game-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .game-title {
+      font-size: 16px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    #game-status {
+      margin-top: 3px;
+      color: #888888;
+      font-size: 10px;
+      text-align: center;
+    }
+
+    .back-button,
+    .restart-button {
+      padding: 9px 12px;
+      border: 1px solid #444444;
+      border-radius: 6px;
+      background: #202020;
+    }
+
+    #game-canvas {
+      display: block;
+      width: 100%;
+      max-height: 65vh;
+      aspect-ratio: 256 / 240;
+      background: #3d1220;
+      border: 2px solid #333333;
+      border-radius: 6px;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      touch-action: none;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .dpad {
+      position: relative;
+      width: 145px;
+      height: 145px;
+      flex: 0 0 145px;
+    }
+
+    .control {
+      position: absolute;
+      border: 1px solid #444444;
+      background: #202020;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .control.active,
+    .control:active {
+      background: #555555;
+    }
+
+    .dpad-button {
+      width: 48px;
+      height: 48px;
+      border-radius: 6px;
+    }
+
+    .up {
+      top: 0;
+      left: 48px;
+    }
+
+    .down {
+      bottom: 0;
+      left: 48px;
+    }
+
+    .left {
+      top: 48px;
+      left: 0;
+    }
+
+    .right {
+      top: 48px;
+      right: 0;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .action-button {
+      position: static;
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      font-weight: bold;
+    }
+
+    .instructions {
+      margin-top: 10px;
+      color: #666666;
+      font-size: 10px;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    .menu-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 14px 0 18px;
+    }
+
+    .menu-link {
+      flex: 1 1 calc(50% - 8px);
+      min-width: 130px;
+      padding: 12px;
+      border: 1px solid #4a1c2a;
+      border-radius: 8px;
+      background: #170b11;
+      color: #ffd9e0;
+      font-size: 11px;
+      text-align: left;
+    }
+
+    .menu-link:active {
+      background: #341521;
+    }
+
+    .list-node {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      border: 1px solid #4a1c2a;
+      border-radius: 8px;
+      background: linear-gradient(160deg, #201019, #140a10);
+      text-align: left;
+    }
+
+    .list-node:active {
+      background: linear-gradient(160deg, #341521, #1c0d15);
+    }
+
+    .list-node.locked {
+      opacity: 0.45;
+    }
+
+    .list-node.done {
+      border-color: #6f9c5a;
+    }
+
+    .list-node .node-icon {
+      font-size: 22px;
+      width: 30px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .list-node .node-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .list-node .node-title {
+      font-size: 13px;
+      font-weight: bold;
+      color: #ffd9e0;
+    }
+
+    .list-node .node-sub {
+      margin-top: 3px;
+      color: #a3717f;
+      font-size: 10px;
+      line-height: 1.5;
+    }
+
+    .list-node .node-badge {
+      flex-shrink: 0;
+      font-size: 9px;
+      color: #c8203f;
+      letter-spacing: 1px;
+    }
+
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px;
+      margin-bottom: 8px;
+      border: 1px solid #3a1620;
+      border-radius: 8px;
+      background: #12080d;
+    }
+
+    .settings-row .settings-label {
+      font-size: 11px;
+      color: #ffd9e0;
+    }
+
+    .settings-row .settings-sub {
+      margin-top: 3px;
+      font-size: 9px;
+      color: #a3717f;
+    }
+
+    .settings-row input[type="range"] {
+      width: 120px;
+    }
+
+    .toggle-button {
+      padding: 8px 14px;
+      border: 1px solid #4a1c2a;
+      border-radius: 6px;
+      background: #24101a;
+      color: #ffd9e0;
+      font-size: 11px;
+    }
+
+    .toggle-button.on {
+      background: #4a2233;
+      border-color: #c8203f;
+      color: #ffe3e8;
+    }
+
+    .danger-button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 12px;
+      border: 1px solid #7a2030;
+      border-radius: 8px;
+      background: #2a0e14;
+      color: #ff9aa8;
+      font-size: 11px;
+    }
+
+    #pause-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 40;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: rgba(6, 3, 5, 0.86);
+      border-radius: 6px;
+    }
+
+    #pause-overlay.active {
+      display: flex;
+    }
+
+    #pause-overlay .pause-title {
+      font-size: 20px;
+      font-weight: bold;
+      letter-spacing: 3px;
+      color: #ffe3e8;
+      margin-bottom: 8px;
+      text-shadow:
+        1px 0 rgba(255, 60, 60, 0.55),
+        -1px 0 rgba(60, 180, 255, 0.45);
+    }
+
+    .pause-button {
+      width: 200px;
+      padding: 11px;
+      border: 1px solid #4a1c2a;
+      border-radius: 6px;
+      background: #201019;
+      color: #ffd9e0;
+      font-size: 11px;
+      letter-spacing: 1px;
+    }
+
+    .pause-button:active {
+      background: #341521;
+    }
+
+    #game-canvas-wrap {
+      position: relative;
+    }
+
+    #toast-stack {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      pointer-events: none;
+      width: 92%;
+      max-width: 360px;
+    }
+
+    .toast {
+      padding: 10px 14px;
+      border: 1px solid #c8203f;
+      border-radius: 8px;
+      background: rgba(20, 8, 12, 0.95);
+      color: #ffe3e8;
+      font-size: 10px;
+      line-height: 1.5;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      transform: translateY(-8px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast .toast-title {
+      font-weight: bold;
+      color: #ffd9e0;
+      letter-spacing: 1px;
+      font-size: 9px;
+    }
+
+    @media (orientation: landscape) and (max-height: 600px) {
+      #header {
+        min-height: 44px;
+        padding: 6px 10px;
+      }
+
+      #screen {
+        padding: 8px 12px;
+      }
+
+      #game-canvas {
+        max-height: 55vh;
+      }
+
+      .controls {
+        margin-top: 6px;
+      }
+
+      .dpad {
+        transform: scale(0.75);
+        margin: -18px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="app">
+
+    <div id="loading-screen">
+
+      <img class="loading-logo" src="data:image/png;base64,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" alt="Rabbithollow Code studio">
+
+      <div class="loading-name">
+        <span class="r1">Rabbit</span><span class="r2">hollow</span>
+        <span class="r3">Code studio</span>
+      </div>
+
+      <div class="loading-carrots" id="loading-carrots"></div>
+
+      <div class="loading-status" id="loading-status">Načítání levelu…</div>
+
+    </div>
+
+    <div id="boot-view">
+
+      <div class="boot-icon">
+        🗡️
+      </div>
+
+      <div class="boot-title">
+        RABBITHOLLOW
+      </div>
+
+      <div class="boot-subtitle">
+        RETRO ENGINE · GOTHIC EDITION
+      </div>
+
+      <div class="boot-bar-track">
+        <div class="boot-bar-fill"></div>
+      </div>
+
+      <div class="boot-hint">
+        TAP TO CONTINUE
+      </div>
+
+    </div>
+
+    <script>
+      (function () {
+
+        var bootView =
+          document.getElementById(
+            "boot-view"
+          );
+
+        if (
+          !bootView
+        ) {
+          return;
+        }
+
+        var dismissed =
+          false;
+
+        function dismissBoot() {
+
+          if (
+            dismissed
+          ) {
+            return;
+          }
+
+          dismissed =
+            true;
+
+          bootView.classList.add(
+            "hidden"
+          );
+        }
+
+        bootView.addEventListener(
+          "click",
+          dismissBoot
+        );
+
+        bootView.addEventListener(
+          "touchstart",
+          dismissBoot,
+          { passive: true }
+        );
+
+        bootView.addEventListener(
+          "pointerdown",
+          dismissBoot
+        );
+
+        window.setTimeout(
+          dismissBoot,
+          1800
+        );
+      })();
+    </script>
+
+    <header id="header">
+
+      <div>
+        <div class="logo">
+          RABBITHOLLOW
+        </div>
+
+        <div class="version" id="version-label">
+          RETRO ENGINE v7.0 · GOTHIC EDITION
+        </div>
+      </div>
+
+      <div class="header-actions">
+
+        <button
+          class="header-button"
+          id="home-button"
+          type="button"
+        >
+          ⌂
+        </button>
+
+        <button
+          class="header-button"
+          id="fullscreen-button"
+          type="button"
+        >
+          ⛶
+        </button>
+
+      </div>
+
+    </header>
+
+    <main id="screen">
+
+      <section
+        id="menu-view"
+        class="view active"
+      >
+
+        <div class="hero">
+
+          <div class="hero-label">
+            RABBITHOLLOW ENTERTAINMENT SYSTEM
+          </div>
+
+          <h1>
+            RABBITHOLLOW Knight.
+          </h1>
+
+          <div class="hero-text">
+            Vlastní retro platformový engine inspirovaný
+            8bitovou érou. Žádné externí knihovny.
+            Canvas renderer, vlastní sprite systém,
+            animace, kolize, enemies, coiny a mobilní ovládání.
+          </div>
+
+        </div>
+
+        <div class="section-title">
+          SELECT GAME
+        </div>
+
+        <div id="menu-highscore" class="hero-text" style="margin-bottom: 10px;">
+          BEST SCORE: 0
+        </div>
+
+        <button
+          class="game-card"
+          id="start-game"
+          type="button"
+        >
+
+          <div class="game-icon">
+            🚀
+          </div>
+
+          <div class="game-name">
+             Kampaň
+          </div>
+
+          <div class="game-description">
+            Vlastní 8bitová platformovka.
+            8 levelů rostoucí obtížnosti,
+            3 životy, štítový power-up,
+            skryté coiny a nepřátelé po cestě.
+          </div>
+
+          <div class="game-meta">
+            PLATFORMER · 8 LEVELS · LIVES · POWER-UPS
+          </div>
+
+        </button>
+
+        <button
+          class="game-card"
+          id="start-endless"
+          type="button"
+        >
+
+          <div class="game-icon">
+            ♾️
+          </div>
+
+          <div class="game-name">
+            Endless Mode
+          </div>
+
+          <div class="game-description">
+            Nekonečně generované úseky s rostoucí
+            obtížností. Honba za nejvyšším skóre.
+          </div>
+
+          <div class="game-meta">
+            ENDLESS · SCORE ATTACK · HIGH SCORE
+          </div>
+
+        </button>
+
+        <div class="menu-links">
+
+          <button class="menu-link" id="open-worldmap" type="button">
+            🗺️ World Map
+          </button>
+
+          <button class="menu-link" id="open-achievements" type="button">
+            🏆 Achievements
+          </button>
+
+          <button class="menu-link" id="open-characters" type="button">
+            🐺 Postavy
+          </button>
+
+          <button class="menu-link" id="open-settings" type="button">
+            ⚙️ Settings
+          </button>
+
+          <button class="menu-link" id="open-updates" type="button">
+            📜 Update History
+          </button>
+
+        </div>
+
+        <div class="engine-info">
+
+          <b>RABBITHOLLOW RETRO ENGINE</b>
+
+          <br><br>
+
+          Core:
+          Game Loop · Canvas Renderer · Input Manager
+
+          <br>
+
+          Graphics:
+          SpriteSheet · SpriteAnimator · Parallax · Particles
+
+          <br>
+
+          Gameplay:
+          Physics · Gravity · Collision · Platforms
+
+          <br>
+
+          Entities:
+          Player · Enemies · Coins
+
+          <br>
+
+          Systems:
+          Camera Shake · Score · Game Over · Level Complete
+
+        </div>
+
+      </section>
+
+      <section
+        id="game-view"
+        class="view"
+      >
+
+        <div class="game-header">
+
+          <button
+            class="back-button"
+            id="back-button"
+            type="button"
+          >
+            ← MENU
+          </button>
+
+          <div>
+
+            <div
+              class="game-title"
+              id="game-title"
+            >
+              RabbitHollow Bros.
+            </div>
+
+            <div id="game-status">
+              READY
+            </div>
+
+          </div>
+
+          <button
+            class="restart-button"
+            id="restart-button"
+            type="button"
+          >
+            RESTART
+          </button>
+
+          <button
+            class="restart-button"
+            id="pause-button"
+            type="button"
+          >
+            ⏸
+          </button>
+
+        </div>
+
+        <div id="game-canvas-wrap">
+
+          <canvas
+            id="game-canvas"
+            width="256"
+            height="240"
+          ></canvas>
+
+          <div id="pause-overlay">
+
+            <div class="pause-title">
+              PAUSED
+            </div>
+
+            <button class="pause-button" id="resume-button" type="button">
+              ▶ RESUME
+            </button>
+
+            <button class="pause-button" id="pause-restart-button" type="button">
+              ⟲ RESTART LEVEL
+            </button>
+
+            <button class="pause-button" id="pause-settings-button" type="button">
+              ⚙️ SETTINGS
+            </button>
+
+            <button class="pause-button" id="pause-menu-button" type="button">
+              ⌂ MAIN MENU
+            </button>
+
+          </div>
+
+        </div>
+
+        <div class="controls">
+
+          <div class="dpad">
+
+            <button
+              class="control dpad-button up"
+              data-input="up"
+              type="button"
+            >
+              ▲
+            </button>
+
+            <button
+              class="control dpad-button down"
+              data-input="down"
+              type="button"
+            >
+              ▼
+            </button>
+
+            <button
+              class="control dpad-button left"
+              data-input="left"
+              type="button"
+            >
+              ◀
+            </button>
+
+            <button
+              class="control dpad-button right"
+              data-input="right"
+              type="button"
+            >
+              ▶
+            </button>
+
+          </div>
+
+          <div class="action-buttons">
+
+            <button
+              class="control action-button"
+              data-input="b"
+              type="button"
+            >
+              B
+            </button>
+
+            <button
+              class="control action-button"
+              data-input="a"
+              type="button"
+            >
+              A
+            </button>
+
+          </div>
+
+        </div>
+
+        <div class="instructions">
+          ◀ ▶ pohyb · A / SPACE skok · B útok · ENTER restart
+        </div>
+
+      </section>
+
+      <section id="worldmap-view" class="view">
+
+        <div class="hero">
+          <div class="hero-label">NAVIGATION</div>
+          <h1>WORLD MAP</h1>
+          <div class="hero-text">
+            Vyber level kampaně. Odemčené levely jsou ty,
+            které jsi už dokázal doběhnout do konce.
+          </div>
+        </div>
+
+        <button class="back-button" id="worldmap-back" type="button">← MENU</button>
+
+        <div id="worldmap-list" style="margin-top:14px;"></div>
+
+      </section>
+
+      <section id="achievements-view" class="view">
+
+        <div class="hero">
+          <div class="hero-label">PROGRESS</div>
+          <h1>ACHIEVEMENTS</h1>
+          <div class="hero-text">
+            Splň herní výzvy a odemkni všechny odznaky.
+          </div>
+        </div>
+
+        <button class="back-button" id="achievements-back" type="button">← MENU</button>
+
+        <div id="achievements-list" style="margin-top:14px;"></div>
+
+      </section>
+
+      <section id="character-view" class="view">
+
+        <div class="hero">
+          <div class="hero-label">ROSTER</div>
+          <h1>POSTAVY</h1>
+          <div class="hero-text">
+            Vyber si postavu pro hru. Padlý Rytíř se odemkne
+            po dokončení všech 8 levelů kampaně.
+          </div>
+        </div>
+
+        <button class="back-button" id="character-back" type="button">← MENU</button>
+
+        <div id="character-list" style="margin-top:14px;"></div>
+
+      </section>
+
+      <section id="settings-view" class="view">
+
+        <div class="hero">
+          <div class="hero-label">CONFIG</div>
+          <h1>SETTINGS</h1>
+          <div class="hero-text">
+            Zvuk a uložený postup.
+          </div>
+        </div>
+
+        <button class="back-button" id="settings-back" type="button">← MENU</button>
+
+        <div style="margin-top:14px;">
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">🔊 Zvuk</div>
+              <div class="settings-sub">Zapnout / vypnout efekty</div>
+            </div>
+            <button class="toggle-button" id="settings-mute-toggle" type="button">ZAPNUTO</button>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">🔉 Hlasitost</div>
+              <div class="settings-sub" id="settings-volume-value">70%</div>
+            </div>
+            <input type="range" id="settings-volume" min="0" max="100" value="70">
+          </div>
+
+          <button class="danger-button" id="settings-reset" type="button">
+            🗑️ RESETOVAT VEŠKERÝ POSTUP
+          </button>
+
+        </div>
+
+      </section>
+
+      <section id="updates-view" class="view">
+
+        <div class="hero">
+          <div class="hero-label">CHANGELOG</div>
+          <h1>UPDATE HISTORY</h1>
+          <div class="hero-text">
+            Historie verzí RabbitHollow Bros.
+          </div>
+        </div>
+
+        <button class="back-button" id="updates-back" type="button">← MENU</button>
+
+        <div id="updates-list" style="margin-top:14px;"></div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <div id="toast-stack"></div>
+
+  <script>
+    "use strict";
+
+    // ---------------------------------------------------------------
+    // LOADING SCREEN - branded splash s mrkvičkovým progress barem.
+    // Používá se na startu appky i při vstupu do nové hry/levelu.
+    // ---------------------------------------------------------------
+    const LOADING_MESSAGES = [
+      "Ostříme meč…",
+      "Leštíme brnění…",
+      "Sbíráme mrkvičky…",
+      "Probouzíme strážce hradu…",
+      "Rozsvěcíme pochodně…",
+      "Načítání levelu…"
+    ];
+
+    function initLoadingCarrots(count) {
+
+      const track =
+        document.getElementById("loading-carrots");
+
+      if (!track) {
+        return;
+      }
+
+      track.innerHTML = "";
+
+      for (let i = 0; i < count; i++) {
+
+        const slot =
+          document.createElement("span");
+
+        slot.className = "carrot-slot";
+        slot.textContent = "🥕";
+
+        track.appendChild(slot);
+      }
+    }
+
+    function runLoadingScreen(onComplete, duration) {
+
+      const overlay =
+        document.getElementById("loading-screen");
+
+      const statusEl =
+        document.getElementById("loading-status");
+
+      if (!overlay) {
+        if (onComplete) {
+          onComplete();
+        }
+        return;
+      }
+
+      const CARROT_COUNT = 8;
+
+      const totalDuration =
+        duration || 1400;
+
+      overlay.classList.remove("hidden");
+
+      initLoadingCarrots(CARROT_COUNT);
+
+      const slots =
+        overlay.querySelectorAll(".carrot-slot");
+
+      const startTime =
+        performance.now();
+
+      let finished = false;
+
+      function tick(now) {
+
+        const elapsed =
+          now - startTime;
+
+        const progress =
+          Math.min(1, elapsed / totalDuration);
+
+        const litCount =
+          Math.floor(progress * CARROT_COUNT);
+
+        slots.forEach((slot, i) => {
+          slot.classList.toggle("lit", i < litCount);
+        });
+
+        if (statusEl) {
+
+          const msgIndex =
+            Math.min(
+              LOADING_MESSAGES.length - 1,
+              Math.floor(progress * LOADING_MESSAGES.length)
+            );
+
+          statusEl.innerHTML =
+            LOADING_MESSAGES[msgIndex] +
+            " <b>" + Math.floor(progress * 100) + "%</b>";
+        }
+
+        if (progress >= 1 && !finished) {
+
+          finished = true;
+
+          overlay.classList.add("hidden");
+
+          if (onComplete) {
+            onComplete();
+          }
+
+          return;
+        }
+
+        if (!finished) {
+          requestAnimationFrame(tick);
+        }
+      }
+
+      requestAnimationFrame(tick);
+    }
+
+    const canvas =
+      document.getElementById("game-canvas");
+
+    const ctx =
+      canvas.getContext("2d");
+
+    ctx.imageSmoothingEnabled =
+      false;
+
+    const menuView =
+      document.getElementById("menu-view");
+
+    const gameView =
+      document.getElementById("game-view");
+
+    const worldmapView =
+      document.getElementById("worldmap-view");
+
+    const achievementsView =
+      document.getElementById("achievements-view");
+
+    const characterView =
+      document.getElementById("character-view");
+
+    const settingsView =
+      document.getElementById("settings-view");
+
+    const updatesView =
+      document.getElementById("updates-view");
+
+    const allViews =
+      [menuView, gameView, worldmapView, achievementsView, characterView, settingsView, updatesView];
+
+    function showView(view) {
+
+      allViews.forEach(v => {
+        if (v) {
+          v.classList.remove("active");
+        }
+      });
+
+      if (view) {
+        view.classList.add("active");
+      }
+    }
+
+    const gameTitle =
+      document.getElementById("game-title");
+
+    const gameStatus =
+      document.getElementById("game-status");
+
+    const input = {
+      up: false,
+      down: false,
+      left: false,
+      right: false,
+      a: false,
+      b: false
+    };
+
+    let attackPressed = false;
+
+    const keyMap = {
+      ArrowUp: "up",
+      ArrowDown: "down",
+      ArrowLeft: "left",
+      ArrowRight: "right",
+      KeyZ: "b",
+      KeyX: "a",
+      Space: "a"
+    };
+
+    class SpriteSheet {
+
+      constructor(
+        frameWidth,
+        frameHeight,
+        columns,
+        rows
+      ) {
+        this.frameWidth =
+          frameWidth;
+
+        this.frameHeight =
+          frameHeight;
+
+        this.columns =
+          columns;
+
+        this.rows =
+          rows;
+
+        this.canvas =
+          document.createElement("canvas");
+
+        this.canvas.width =
+          frameWidth *
+          columns;
+
+        this.canvas.height =
+          frameHeight *
+          rows;
+
+        this.context =
+          this.canvas.getContext("2d");
+
+        this.context.imageSmoothingEnabled =
+          false;
+      }
+
+      drawFrame(
+        frame,
+        x,
+        y,
+        scale = 1,
+        flipX = false
+      ) {
+        const sourceX =
+          (
+            frame %
+            this.columns
+          ) *
+          this.frameWidth;
+
+        const sourceY =
+          Math.floor(
+            frame /
+            this.columns
+          ) *
+          this.frameHeight;
+
+        const width =
+          this.frameWidth *
+          scale;
+
+        const height =
+          this.frameHeight *
+          scale;
+
+        ctx.save();
+
+        if (
+          flipX
+        ) {
+          ctx.translate(
+            x + width,
+            y
+          );
+
+          ctx.scale(
+            -1,
+            1
+          );
+
+          ctx.drawImage(
+            this.canvas,
+            sourceX,
+            sourceY,
+            this.frameWidth,
+            this.frameHeight,
+            0,
+            0,
+            width,
+            height
+          );
+
+        } else {
+
+          ctx.drawImage(
+            this.canvas,
+            sourceX,
+            sourceY,
+            this.frameWidth,
+            this.frameHeight,
+            x,
+            y,
+            width,
+            height
+          );
+        }
+
+        ctx.restore();
+      }
+    }
+
+    class SpriteAnimator {
+
+      constructor(
+        spriteSheet,
+        animations
+      ) {
+        this.spriteSheet =
+          spriteSheet;
+
+        this.animations =
+          animations;
+
+        this.currentAnimation =
+          "idle";
+
+        this.currentFrame =
+          0;
+
+        this.elapsed =
+          0;
+
+        this.flipX =
+          false;
+      }
+
+      setAnimation(
+        name
+      ) {
+        if (
+          !this.animations[name]
+        ) {
+          return;
+        }
+
+        if (
+          this.currentAnimation !==
+          name
+        ) {
+          this.currentAnimation =
+            name;
+
+          this.currentFrame =
+            0;
+
+          this.elapsed =
+            0;
+        }
+      }
+
+      update(
+        delta
+      ) {
+        const animation =
+          this.animations[
+            this.currentAnimation
+          ];
+
+        if (
+          !animation
+        ) {
+          return;
+        }
+
+        this.elapsed +=
+          delta;
+
+        const frameDuration =
+          1 /
+          animation.fps;
+
+        if (
+          this.elapsed >=
+          frameDuration
+        ) {
+          this.elapsed =
+            0;
+
+          this.currentFrame =
+            (
+              this.currentFrame +
+              1
+            ) %
+            animation.frames.length;
+        }
+      }
+
+      draw(
+        x,
+        y,
+        scale = 1
+      ) {
+        const animation =
+          this.animations[
+            this.currentAnimation
+          ];
+
+        if (
+          !animation
+        ) {
+          return;
+        }
+
+        const frame =
+          animation.frames[
+            this.currentFrame
+          ];
+
+        this.spriteSheet.drawFrame(
+          frame,
+          x,
+          y,
+          scale,
+          this.flipX
+        );
+      }
+    }
+
+    // ---------------------------------------------------------------
+    // Gotický rytíř: bílo-stříbrná zbroj, karmínový plášť, žhnoucí oči
+    // ---------------------------------------------------------------
+    function createRabbitSpriteSheet() {
+
+      const sheet =
+        new SpriteSheet(
+          16,
+          20,
+          8,
+          1
+        );
+
+      const sprite =
+        sheet.context;
+
+      for (
+        let frame = 0;
+        frame < 8;
+        frame++
+      ) {
+
+        const x =
+          frame *
+          16;
+
+        const legOffset =
+          frame % 2 === 0
+            ? 0
+            : 2;
+
+        const capeSway =
+          frame % 2 === 0
+            ? 0
+            : 1;
+
+        // stín pod tělem
+        sprite.fillStyle =
+          "rgba(0,0,0,0.3)";
+
+        sprite.fillRect(
+          x + 3,
+          18,
+          10,
+          2
+        );
+
+        // plášť - vzadu, tmavě karmínový
+        sprite.fillStyle =
+          "#5c0f1f";
+
+        sprite.fillRect(
+          x + 3 -
+            capeSway,
+          8,
+          4,
+          11
+        );
+
+        sprite.fillStyle =
+          "#7a1428";
+
+        sprite.fillRect(
+          x + 3 -
+            capeSway,
+          8,
+          2,
+          11
+        );
+
+        // ramenní pláty (pauldrony) - stříbrné s karmínovým lemem
+        sprite.fillStyle =
+          "#c9c9d2";
+
+        sprite.fillRect(
+          x + 3,
+          7,
+          3,
+          3
+        );
+
+        sprite.fillRect(
+          x + 10,
+          7,
+          3,
+          3
+        );
+
+        sprite.fillStyle =
+          "#9a1a2e";
+
+        sprite.fillRect(
+          x + 3,
+          9,
+          3,
+          1
+        );
+
+        sprite.fillRect(
+          x + 10,
+          9,
+          3,
+          1
+        );
+
+        // hrudní zbroj - bílo-stříbrná
+        sprite.fillStyle =
+          "#e6e6ec";
+
+        sprite.fillRect(
+          x + 5,
+          8,
+          6,
+          8
+        );
+
+        // stín na pravé straně zbroje (objem)
+        sprite.fillStyle =
+          "#b7b7c4";
+
+        sprite.fillRect(
+          x + 10,
+          8,
+          1,
+          8
+        );
+
+        // karmínový pás přes hruď
+        sprite.fillStyle =
+          "#c8203f";
+
+        sprite.fillRect(
+          x + 5,
+          11,
+          6,
+          2
+        );
+
+        sprite.fillStyle =
+          "#8a1226";
+
+        sprite.fillRect(
+          x + 5,
+          11,
+          6,
+          1
+        );
+
+        // opasek
+        sprite.fillStyle =
+          "#2a2a30";
+
+        sprite.fillRect(
+          x + 5,
+          15,
+          6,
+          1
+        );
+
+        // přilba
+        sprite.fillStyle =
+          "#dcdce4";
+
+        sprite.fillRect(
+          x + 5,
+          1,
+          6,
+          7
+        );
+
+        sprite.fillStyle =
+          "#b7b7c4";
+
+        sprite.fillRect(
+          x + 5,
+          6,
+          6,
+          2
+        );
+
+        // hřeben přilby - karmínové pero
+        sprite.fillStyle =
+          "#c8203f";
+
+        sprite.fillRect(
+          x + 7,
+          0,
+          2,
+          2
+        );
+
+        // hledí / štěrbina - černá s žhnoucíma očima
+        sprite.fillStyle =
+          "#111114";
+
+        sprite.fillRect(
+          x + 6,
+          4,
+          4,
+          2
+        );
+
+        sprite.fillStyle =
+          "#ff2d4d";
+
+        sprite.fillRect(
+          x + 7,
+          4,
+          1,
+          1
+        );
+
+        sprite.fillRect(
+          x + 9,
+          4,
+          1,
+          1
+        );
+
+        // nohy / holenní pláty - tmavá ocel
+        sprite.fillStyle =
+          "#3a3a42";
+
+        sprite.fillRect(
+          x + 4 + legOffset,
+          16,
+          4,
+          3
+        );
+
+        sprite.fillRect(
+          x + 9 - legOffset,
+          16,
+          4,
+          3
+        );
+
+        sprite.fillStyle =
+          "#1c1c22";
+
+        sprite.fillRect(
+          x + 4 + legOffset,
+          18,
+          4,
+          1
+        );
+
+        sprite.fillRect(
+          x + 9 - legOffset,
+          18,
+          4,
+          1
+        );
+
+        // meč po boku - záblesk čepele
+        sprite.fillStyle =
+          "#cfe8ff";
+
+        sprite.fillRect(
+          x + 12,
+          9,
+          1,
+          8
+        );
+
+        sprite.fillStyle =
+          "#6fb8ff";
+
+        sprite.fillRect(
+          x + 12,
+          9,
+          1,
+          2
+        );
+      }
+
+      return sheet;
+    }
+
+    const rabbitSheet =
+      createRabbitSpriteSheet();
+
+    // ---------------------------------------------------------------
+    // Padlý Rytíř (Void Knight) - odemykatelná postava za dokončení
+    // kampaně. Stejné rozložení snímků jako výchozí rytíř, jen
+    // přebarvená do černo-zlaté s fialovou září.
+    // ---------------------------------------------------------------
+    function createVoidKnightSpriteSheet() {
+
+      const sheet =
+        new SpriteSheet(16, 20, 8, 1);
+
+      const sprite =
+        sheet.context;
+
+      for (let frame = 0; frame < 8; frame++) {
+
+        const x = frame * 16;
+
+        const legOffset =
+          frame % 2 === 0 ? 0 : 2;
+
+        const capeSway =
+          frame % 2 === 0 ? 0 : 1;
+
+        // stín pod tělem
+        sprite.fillStyle = "rgba(0,0,0,0.3)";
+        sprite.fillRect(x + 3, 18, 10, 2);
+
+        // plášť - vzadu, hluboce fialový
+        sprite.fillStyle = "#1c0a2e";
+        sprite.fillRect(x + 3 - capeSway, 8, 4, 11);
+
+        sprite.fillStyle = "#3a1258";
+        sprite.fillRect(x + 3 - capeSway, 8, 2, 11);
+
+        // ramenní pláty - černá ocel se zlatým lemem
+        sprite.fillStyle = "#2a2a30";
+        sprite.fillRect(x + 3, 7, 3, 3);
+        sprite.fillRect(x + 10, 7, 3, 3);
+
+        sprite.fillStyle = "#d4af37";
+        sprite.fillRect(x + 3, 9, 3, 1);
+        sprite.fillRect(x + 10, 9, 3, 1);
+
+        // hrudní zbroj - matná černá ocel
+        sprite.fillStyle = "#18181e";
+        sprite.fillRect(x + 5, 8, 6, 8);
+
+        // stín na pravé straně zbroje (objem)
+        sprite.fillStyle = "#0a0a0e";
+        sprite.fillRect(x + 10, 8, 1, 8);
+
+        // zlatý pás přes hruď
+        sprite.fillStyle = "#d4af37";
+        sprite.fillRect(x + 5, 11, 6, 2);
+
+        sprite.fillStyle = "#8a6c1a";
+        sprite.fillRect(x + 5, 11, 6, 1);
+
+        // opasek
+        sprite.fillStyle = "#0c0c10";
+        sprite.fillRect(x + 5, 15, 6, 1);
+
+        // přilba
+        sprite.fillStyle = "#22222a";
+        sprite.fillRect(x + 5, 1, 6, 7);
+
+        sprite.fillStyle = "#0e0e12";
+        sprite.fillRect(x + 5, 6, 6, 2);
+
+        // hřeben přilby - zlaté pero
+        sprite.fillStyle = "#d4af37";
+        sprite.fillRect(x + 7, 0, 2, 2);
+
+        // hledí / štěrbina - černá s žhnoucíma fialovýma očima
+        sprite.fillStyle = "#050508";
+        sprite.fillRect(x + 6, 4, 4, 2);
+
+        sprite.fillStyle = "#b060ff";
+        sprite.fillRect(x + 7, 4, 1, 1);
+        sprite.fillRect(x + 9, 4, 1, 1);
+
+        // nohy / holenní pláty - černá ocel
+        sprite.fillStyle = "#1c1c22";
+        sprite.fillRect(x + 4 + legOffset, 16, 4, 3);
+        sprite.fillRect(x + 9 - legOffset, 16, 4, 3);
+
+        sprite.fillStyle = "#08080a";
+        sprite.fillRect(x + 4 + legOffset, 18, 4, 1);
+        sprite.fillRect(x + 9 - legOffset, 18, 4, 1);
+
+        // meč po boku - fialový přísvit čepele
+        sprite.fillStyle = "#e0c8ff";
+        sprite.fillRect(x + 12, 9, 1, 8);
+
+        sprite.fillStyle = "#a060e0";
+        sprite.fillRect(x + 12, 9, 1, 2);
+      }
+
+      return sheet;
+    }
+
+    const voidKnightSheet =
+      createVoidKnightSpriteSheet();
+
+    const rabbitAnimations = {
+
+      idle: {
+        frames: [0, 1],
+        fps: 3
+      },
+
+      run: {
+        frames: [2, 3, 4, 5],
+        fps: 10
+      },
+
+      jump: {
+        frames: [6],
+        fps: 1
+      },
+
+      fall: {
+        frames: [7],
+        fps: 1
+      }
+
+    };
+
+    // ---------------------------------------------------------------
+    // Deterministický "šum" pro dekorace pozadí (bez Math.random driftu)
+    // ---------------------------------------------------------------
+    function pseudoNoise(
+      seed
+    ) {
+      const value =
+        Math.sin(
+          seed *
+          12.9898
+        ) *
+        43758.5453;
+
+      return value -
+        Math.floor(
+          value
+        );
+    }
+
+    // ---------------------------------------------------------------
+    // CRT scanline vzor - vytvořen jednou, pak recyklován (výkon)
+    // ---------------------------------------------------------------
+    let scanlinePatternCache =
+      null;
+
+    function getScanlinePattern() {
+
+      if (
+        scanlinePatternCache
+      ) {
+        return scanlinePatternCache;
+      }
+
+      const tile =
+        document.createElement(
+          "canvas"
+        );
+
+      tile.width = 1;
+
+      tile.height = 3;
+
+      const tileContext =
+        tile.getContext(
+          "2d"
+        );
+
+      tileContext.fillStyle =
+        "rgba(0,0,0,0)";
+
+      tileContext.fillRect(
+        0,
+        0,
+        1,
+        3
+      );
+
+      tileContext.fillStyle =
+        "rgba(0,0,0,0.16)";
+
+      tileContext.fillRect(
+        0,
+        0,
+        1,
+        1
+      );
+
+      scanlinePatternCache =
+        ctx.createPattern(
+          tile,
+          "repeat"
+        );
+
+      return scanlinePatternCache;
+    }
+
+    // ---------------------------------------------------------------
+    // Jednoduchý částicový systém (jiskry z coinů, prach z enemies)
+    // ---------------------------------------------------------------
+    const Particles = {
+
+      list: [],
+
+      spawnBurst(
+        x,
+        y,
+        count,
+        colors,
+        speed,
+        gravity
+      ) {
+
+        for (
+          let i = 0;
+          i < count;
+          i++
+        ) {
+
+          const angle =
+            (
+              Math.PI *
+              2 *
+              i
+            ) /
+            count +
+            Math.random() *
+            0.6;
+
+          const velocity =
+            speed *
+            (
+              0.5 +
+              Math.random() *
+              0.6
+            );
+
+          this.list.push({
+            x,
+            y,
+            vx:
+              Math.cos(
+                angle
+              ) *
+              velocity,
+            vy:
+              Math.sin(
+                angle
+              ) *
+              velocity -
+              speed *
+              0.3,
+            life: 0.5,
+            maxLife: 0.5,
+            gravity,
+            color:
+              colors[
+                i %
+                colors.length
+              ],
+            size:
+              1 +
+              Math.random() *
+              1.5
+          });
+        }
+      },
+
+      update(
+        delta
+      ) {
+
+        for (
+          let i =
+            this.list.length -
+            1;
+          i >= 0;
+          i--
+        ) {
+
+          const particle =
+            this.list[i];
+
+          particle.life -=
+            delta;
+
+          if (
+            particle.life <=
+            0
+          ) {
+
+            this.list.splice(
+              i,
+              1
+            );
+
+            continue;
+          }
+
+          particle.vy +=
+            particle.gravity *
+            delta;
+
+          particle.x +=
+            particle.vx *
+            delta;
+
+          particle.y +=
+            particle.vy *
+            delta;
+        }
+      },
+
+      render() {
+
+        for (
+          const particle of
+          this.list
+        ) {
+
+          const alpha =
+            Math.max(
+              0,
+              particle.life /
+              particle.maxLife
+            );
+
+          ctx.globalAlpha =
+            alpha;
+
+          ctx.fillStyle =
+            particle.color;
+
+          ctx.fillRect(
+            particle.x -
+              particle.size /
+              2,
+            particle.y -
+              particle.size /
+              2,
+            particle.size,
+            particle.size
+          );
+        }
+
+        ctx.globalAlpha =
+          1;
+      },
+
+      clear() {
+
+        this.list.length =
+          0;
+      }
+    };
+
+    const Engine = {
+
+      running: false,
+
+      paused: false,
+
+      lastTime: 0,
+
+      animationFrame: 0,
+
+      start() {
+
+        this.stop();
+
+        Game.init();
+
+        this.running =
+          true;
+
+        this.paused =
+          false;
+
+        this.lastTime =
+          performance.now();
+
+        this.animationFrame =
+          requestAnimationFrame(
+            this.loop.bind(this)
+          );
+      },
+
+      stop() {
+
+        this.running =
+          false;
+
+        this.paused =
+          false;
+
+        const overlay =
+          document.getElementById("pause-overlay");
+
+        if (overlay) {
+          overlay.classList.remove("active");
+        }
+
+        if (
+          this.animationFrame
+        ) {
+          cancelAnimationFrame(
+            this.animationFrame
+          );
+
+          this.animationFrame =
+            0;
+        }
+      },
+
+      pause() {
+
+        if (!this.running || this.paused) {
+          return;
+        }
+
+        this.paused = true;
+
+        AudioEngine.play("pause");
+
+        const overlay =
+          document.getElementById("pause-overlay");
+
+        if (overlay) {
+          overlay.classList.add("active");
+        }
+
+        clearInput();
+      },
+
+      resume() {
+
+        if (!this.running || !this.paused) {
+          return;
+        }
+
+        this.paused = false;
+
+        this.lastTime =
+          performance.now();
+
+        const overlay =
+          document.getElementById("pause-overlay");
+
+        if (overlay) {
+          overlay.classList.remove("active");
+        }
+      },
+
+      togglePause() {
+
+        if (this.paused) {
+          this.resume();
+        } else {
+          this.pause();
+        }
+      },
+
+      loop(
+        time
+      ) {
+
+        if (
+          !this.running
+        ) {
+          return;
+        }
+
+        if (
+          this.paused
+        ) {
+
+          this.lastTime =
+            time;
+
+          this.animationFrame =
+            requestAnimationFrame(
+              this.loop.bind(this)
+            );
+
+          return;
+        }
+
+        const delta =
+          Math.min(
+            (
+              time -
+              this.lastTime
+            ) /
+            1000,
+            0.05
+          );
+
+        this.lastTime =
+          time;
+
+        try {
+
+          Game.update(
+            delta
+          );
+
+          Particles.update(
+            delta
+          );
+
+          Game.render();
+
+        } catch (
+          error
+        ) {
+
+          console.error(
+            error
+          );
+
+          this.stop();
+
+          gameStatus.textContent =
+            "ENGINE ERROR";
+        }
+
+        this.animationFrame =
+          requestAnimationFrame(
+            this.loop.bind(this)
+          );
+      }
+    };
+
+    // ---------------------------------------------------------------
+    // UPDATE LOG - přidávej novou verzi vždy na začátek pole.
+    // ---------------------------------------------------------------
+    const UPDATE_LOG = [
+      {
+        version: "v7.0",
+        title: "Brand Update",
+        notes: [
+          "🎬 Nový branded loading screen s logem Rabbithollow Code studio",
+          "🥕 Animovaný mrkvičkový progress bar místo obyčejného loadingu",
+          "✨ Zobrazuje se při startu appky i při spuštění kampaně/levelu/endless"
+        ]
+      },
+      {
+        version: "v6.0",
+        title: "Maps & Enemies Update",
+        notes: [
+          "🗺️ 4 mapová témata (Krvavý Hrad, Zmrzlá Kobka, Jedovatý Mokřad, Popelavá Pustina) - cyklí se po levelech",
+          "🦇 Nový nepřítel Bat - létající, kroužení nahoru/dolů",
+          "🗿 Nový nepřítel Brute - velký a pomalý, potřebuje 2 dupnutí",
+          "👻 Nový nepřítel Specter - rychlý, poloprůhledný přízrak",
+          "🐺 Odemykatelná postava Padlý Rytíř za dokončení celé kampaně (8/8 levelů)",
+          "🎭 Nová obrazovka Postavy pro výběr hratelné postavy"
+        ]
+      },
+      {
+        version: "v5.0",
+        title: "Gothic Edition · Systems Update",
+        notes: [
+          "🗺️ World Map - výběr levelu s odemykáním postupu",
+          "🏆 Achievements - 8 odznaků za herní výzvy",
+          "⚙️ Settings - zvuk, hlasitost, reset postupu",
+          "🏰 Checkpoint systém uprostřed levelu",
+          "💾 Trvalé ukládání postupu (localStorage)",
+          "👑 Boss Fight na konci kampaně",
+          "🎵 Základní zvukové efekty (Web Audio)",
+          "⏸️ Pause Menu s resume/restart/settings"
+        ]
+      },
+      {
+        version: "v4.0",
+        title: "Gothic Edition",
+        notes: [
+          "Vizuální gothic redesign UI",
+          "Endless Mode s ukládáním high score",
+          "Mobilní dpad a action ovládání"
+        ]
+      }
+    ];
+
+    // ---------------------------------------------------------------
+    // SAVE SYSTEM - jeden localStorage klíč pro celý persistentní
+    // stav (postup, achievementy, nastavení). Zpětně kompatibilní
+    // se starým klíčem "rabbithollow_highscore".
+    // ---------------------------------------------------------------
+    const SaveSystem = {
+      key: "rabbithollow_save_v1",
+
+      defaults() {
+        return {
+          highScore: 0,
+          unlockedLevel: 0,
+          endlessBest: 0,
+          totalCoins: 0,
+          totalDeaths: 0,
+          bossDefeated: false,
+          allLevelsCleared: false,
+          unlockedCharacter: false,
+          selectedCharacter: "knight",
+          achievements: {},
+          settings: {
+            muted: false,
+            volume: 0.7
+          }
+        };
+      },
+
+      load() {
+        let data = this.defaults();
+
+        try {
+          const raw = localStorage.getItem(this.key);
+
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            data = Object.assign(data, parsed);
+            data.settings = Object.assign(
+              this.defaults().settings,
+              parsed.settings || {}
+            );
+            data.achievements = parsed.achievements || {};
+          }
+
+          const legacyHighScore = Number(
+            localStorage.getItem("rabbithollow_highscore")
+          );
+
+          if (legacyHighScore > data.highScore) {
+            data.highScore = legacyHighScore;
+          }
+        } catch (error) {
+          console.error(error);
+        }
+
+        return data;
+      },
+
+      save() {
+        try {
+          localStorage.setItem(this.key, JSON.stringify(this.data));
+          localStorage.setItem(
+            "rabbithollow_highscore",
+            String(this.data.highScore)
+          );
+        } catch (error) {
+          console.error(error);
+        }
+      },
+
+      reset() {
+        this.data = this.defaults();
+        this.save();
+      }
+    };
+
+    SaveSystem.data = SaveSystem.load();
+
+    // ---------------------------------------------------------------
+    // AUDIO ENGINE - jednoduché SFX generované přes Web Audio API,
+    // žádné externí soubory. Kontext se vytváří líně při první
+    // interakci uživatele (autoplay policy).
+    // ---------------------------------------------------------------
+    const AudioEngine = {
+      ctx: null,
+
+      ensureContext() {
+        if (!this.ctx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) {
+            this.ctx = new AC();
+          }
+        }
+
+        if (this.ctx && this.ctx.state === "suspended") {
+          this.ctx.resume().catch(() => {});
+        }
+
+        return this.ctx;
+      },
+
+      play(name) {
+        if (SaveSystem.data.settings.muted) {
+          return;
+        }
+
+        const ctx = this.ensureContext();
+
+        if (!ctx) {
+          return;
+        }
+
+        const presets = {
+          jump: { freq: 520, type: "square", duration: 0.11, slide: 260 },
+          coin: { freq: 880, type: "square", duration: 0.09, slide: 420 },
+          attack: { freq: 220, type: "sawtooth", duration: 0.08, slide: -80 },
+          hit: { freq: 140, type: "sawtooth", duration: 0.22, slide: -60 },
+          powerup: { freq: 440, type: "triangle", duration: 0.25, slide: 300 },
+          checkpoint: { freq: 660, type: "triangle", duration: 0.2, slide: 200 },
+          levelComplete: { freq: 523, type: "square", duration: 0.35, slide: 260 },
+          gameOver: { freq: 200, type: "sawtooth", duration: 0.5, slide: -140 },
+          achievement: { freq: 700, type: "triangle", duration: 0.3, slide: 260 },
+          bossHit: { freq: 100, type: "square", duration: 0.15, slide: -40 },
+          bossDefeat: { freq: 300, type: "sawtooth", duration: 0.6, slide: 200 },
+          pause: { freq: 360, type: "sine", duration: 0.08, slide: 0 }
+        };
+
+        const preset = presets[name];
+
+        if (!preset) {
+          return;
+        }
+
+        const volume = Math.max(
+          0,
+          Math.min(1, SaveSystem.data.settings.volume)
+        );
+
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = preset.type;
+        osc.frequency.setValueAtTime(preset.freq, now);
+        osc.frequency.linearRampToValueAtTime(
+          Math.max(40, preset.freq + preset.slide),
+          now + preset.duration
+        );
+
+        gain.gain.setValueAtTime(0.22 * volume, now);
+        gain.gain.exponentialRampToValueAtTime(
+          0.001,
+          now + preset.duration
+        );
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + preset.duration + 0.02);
+      }
+    };
+
+    // ---------------------------------------------------------------
+    // ACHIEVEMENTS
+    // ---------------------------------------------------------------
+    const ACHIEVEMENTS = [
+      {
+        id: "first_coin",
+        icon: "🪙",
+        name: "První mrkvák",
+        desc: "Seber svůj první coin."
+      },
+      {
+        id: "coin_collector",
+        icon: "💰",
+        name: "Sběratel",
+        desc: "Seber celkem 100 coinů (napříč hrami)."
+      },
+      {
+        id: "level_1_clear",
+        icon: "🐇",
+        name: "Do díry",
+        desc: "Dokonči 1. level kampaně."
+      },
+      {
+        id: "campaign_clear",
+        icon: "🏰",
+        name: "Kampaň dokončena",
+        desc: "Dokonči všech 8 levelů kampaně."
+      },
+      {
+        id: "boss_slayer",
+        icon: "👑",
+        name: "Zabiják bosse",
+        desc: "Poraz finálního bosse."
+      },
+      {
+        id: "high_score_5000",
+        icon: "⭐",
+        name: "Král skóre",
+        desc: "Dosáhni skóre 5000 v jedné hře."
+      },
+      {
+        id: "endless_10",
+        icon: "♾️",
+        name: "Nekonečný běh",
+        desc: "Dosáhni 10. úseku v Endless Mode."
+      },
+      {
+        id: "no_death_level",
+        icon: "🛡️",
+        name: "Bez škrábnutí",
+        desc: "Dokonči level bez ztráty života."
+      },
+      {
+        id: "character_unlock",
+        icon: "🐺",
+        name: "Padlý Rytíř",
+        desc: "Odemkni skrytou postavu za dokončení kampaně."
+      }
+    ];
+
+    function unlockAchievement(id) {
+      if (SaveSystem.data.achievements[id]) {
+        return;
+      }
+
+      const def = ACHIEVEMENTS.find(a => a.id === id);
+
+      if (!def) {
+        return;
+      }
+
+      SaveSystem.data.achievements[id] = true;
+      SaveSystem.save();
+      AudioEngine.play("achievement");
+      showToast(def.icon + " ACHIEVEMENT UNLOCKED", def.name);
+    }
+
+    function showToast(title, body) {
+      const stack = document.getElementById("toast-stack");
+
+      if (!stack) {
+        return;
+      }
+
+      const toast = document.createElement("div");
+      toast.className = "toast";
+      toast.innerHTML =
+        '<div class="toast-title">' + title + "</div>" + body;
+
+      stack.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.classList.add("show");
+      });
+
+      setTimeout(() => {
+        toast.classList.remove("show");
+        setTimeout(() => toast.remove(), 300);
+      }, 2600);
+    }
+
+    // ---------------------------------------------------------------
+    // Generátor levelů - deterministický podle seedu, takže stejné
+    // číslo levelu vždy vytvoří stejné rozložení (umožňuje retry).
+    // ---------------------------------------------------------------
+    const LEVEL_COUNT = 8;
+
+    // ---------------------------------------------------------------
+    // Mapová témata - každý level cykluje mezi 4 vizuálními styly.
+    // Přebarvení probíhá přes canvas "hue" composite mód, takže
+    // není potřeba přepisovat každou dekorativní kresbu zvlášť.
+    // ---------------------------------------------------------------
+    const MAP_THEMES = [
+      { name: "Krvavý Hrad", icon: "🏰", tint: null },
+      { name: "Zmrzlá Kobka", icon: "❄️", tint: "hsl(200, 75%, 52%)" },
+      { name: "Jedovatý Mokřad", icon: "☠️", tint: "hsl(100, 55%, 42%)" },
+      { name: "Popelavá Pustina", icon: "🔥", tint: "hsl(26, 80%, 48%)" }
+    ];
+
+    function themeForLevel(index) {
+      return MAP_THEMES[index % MAP_THEMES.length];
+    }
+
+    function generateLevel(seed, worldWidth, difficulty) {
+
+      const platforms = [];
+      const coins = [];
+      const enemies = [];
+      const powerUps = [];
+
+      const groundY = 210;
+      const groundHeight = 30;
+
+      let x = 0;
+      let segIndex = 0;
+
+      while (x < worldWidth - 40) {
+
+        const segSeed =
+          seed * 13.7 + segIndex * 3.31;
+
+        const remaining =
+          worldWidth - 40 - x;
+
+        const isLast =
+          remaining < 260;
+
+        const segLength =
+          isLast
+            ? Math.max(remaining, 120)
+            : 90 + pseudoNoise(segSeed) * 130;
+
+        platforms.push({
+          x: x,
+          y: groundY,
+          width: segLength,
+          height: groundHeight
+        });
+
+        if (segIndex > 0 && pseudoNoise(segSeed * 1.9) > 0.35) {
+
+          const upperY =
+            pseudoNoise(segSeed * 2.7) > 0.5 ? 175 : 185;
+
+          const upperWidth =
+            60 + pseudoNoise(segSeed * 3.1) * 40;
+
+          const upperX =
+            x + segLength * 0.25;
+
+          platforms.push({
+            x: upperX,
+            y: upperY,
+            width: upperWidth,
+            height: 8
+          });
+
+          coins.push({
+            x: upperX + upperWidth / 2,
+            y: upperY - 17,
+            collected: false
+          });
+
+          if (powerUps.length === 0 && pseudoNoise(segSeed * 4.4) > 0.72) {
+
+            powerUps.push({
+              x: upperX + upperWidth / 2,
+              y: upperY - 32,
+              collected: false
+            });
+          }
+
+        } else {
+
+          coins.push({
+            x: x + segLength / 2,
+            y: groundY - 22,
+            collected: false
+          });
+        }
+
+        if (segLength > 110 && segIndex > 0) {
+
+          const enemySpeed =
+            Math.min(
+              70,
+              24 + difficulty * 3 + pseudoNoise(segSeed * 5.5) * 10
+            );
+
+          const typeRoll =
+            pseudoNoise(segSeed * 9.3);
+
+          const direction =
+            pseudoNoise(segSeed * 6.6) > 0.5 ? 1 : -1;
+
+          if (typeRoll > 0.82 && difficulty >= 1) {
+
+            // BRUTE - velký, pomalý, potřebuje 2 dupnutí
+            enemies.push({
+              type: "brute",
+              x: x + segLength * 0.4,
+              y: groundY - 26,
+              width: 24,
+              height: 26,
+              minX: x + 6,
+              maxX: x + segLength - 30,
+              direction,
+              speed: enemySpeed * 0.55,
+              hp: 2,
+              alive: true
+            });
+
+          } else if (typeRoll > 0.62 && difficulty >= 1) {
+
+            // BAT - létající, vertikálně krouží
+            const baseY =
+              groundY - 60 - pseudoNoise(segSeed * 8.1) * 30;
+
+            enemies.push({
+              type: "bat",
+              x: x + segLength * 0.4,
+              y: baseY,
+              baseY,
+              width: 16,
+              height: 14,
+              minX: x + 6,
+              maxX: x + segLength - 22,
+              direction,
+              speed: enemySpeed * 1.3,
+              flyAmp: 14 + pseudoNoise(segSeed * 2.2) * 10,
+              flyFreq: 2.2 + pseudoNoise(segSeed * 3.9) * 1.4,
+              flyPhase: pseudoNoise(segSeed * 5.1) * 6.28,
+              alive: true
+            });
+
+          } else if (typeRoll > 0.4) {
+
+            // SPECTER - rychlý, poloprůhledný přízrak
+            enemies.push({
+              type: "specter",
+              x: x + segLength * 0.4,
+              y: groundY - 18,
+              width: 16,
+              height: 18,
+              minX: x + 8,
+              maxX: x + segLength - 26,
+              direction,
+              speed: Math.min(95, enemySpeed * 1.6),
+              alive: true
+            });
+
+          } else {
+
+            // WRAITH - výchozí pozemní nepřítel
+            enemies.push({
+              type: "wraith",
+              x: x + segLength * 0.4,
+              y: groundY - 20,
+              width: 18,
+              height: 20,
+              minX: x + 10,
+              maxX: x + segLength - 28,
+              direction,
+              speed: enemySpeed,
+              alive: true
+            });
+          }
+        }
+
+        if (isLast) {
+          x += segLength;
+          break;
+        }
+
+        const gap =
+          Math.min(
+            64,
+            26 + difficulty * 1.5 + pseudoNoise(segSeed * 7.7) * 18
+          );
+
+        x += segLength + gap;
+        segIndex++;
+      }
+
+      if (powerUps.length === 0 && platforms.length > 2) {
+
+        const target = platforms[2];
+
+        powerUps.push({
+          x: target.x + target.width / 2,
+          y: target.y - 24,
+          collected: false
+        });
+      }
+
+      const finalWorldWidth = Math.max(worldWidth, x + 60);
+
+      return {
+        worldWidth: finalWorldWidth,
+        platforms,
+        coins,
+        enemies,
+        powerUps,
+        checkpoint: {
+          x: finalWorldWidth * 0.5,
+          triggered: false
+        }
+      };
+    }
+
+    function buildLevel(index) {
+
+      const worldWidth =
+        1500 + index * 260;
+
+      const level = generateLevel(
+        index * 7 + 1,
+        worldWidth,
+        index
+      );
+
+      if (index === LEVEL_COUNT - 1) {
+
+        level.boss = {
+          x: level.worldWidth - 150,
+          y: 170,
+          width: 34,
+          height: 40,
+          minX: level.worldWidth - 210,
+          maxX: level.worldWidth - 90,
+          direction: 1,
+          speed: 34,
+          hp: 3,
+          maxHp: 3,
+          alive: true,
+          isBoss: true,
+          hitFlash: 0
+        };
+      }
+
+      level.theme = index % MAP_THEMES.length;
+
+      return level;
+    }
+
+    function buildEndlessLevel(index) {
+
+      const worldWidth =
+        1600 + Math.min(index, 20) * 180;
+
+      const difficulty =
+        Math.min(4 + index, 22);
+
+      const level = generateLevel(
+        index * 11 + 500,
+        worldWidth,
+        difficulty
+      );
+
+      level.theme = index % MAP_THEMES.length;
+
+      return level;
+    }
+
+    const Game = {
+
+      player: null,
+
+      animator: null,
+
+      platforms: [],
+
+      coins: [],
+
+      enemies: [],
+
+      cameraX: 0,
+
+      velocityY: 0,
+
+      grounded: false,
+
+      score: 0,
+
+      coinsCollected: 0,
+
+      gameOver: false,
+
+      won: false,
+
+      worldWidth: 1800,
+
+      shake: 0,
+
+      hitFlash: 0,
+
+      landingSquash: 0,
+
+      dustTimer: 0,
+
+      birds: [],
+
+      stars: [],
+
+      fireflies: [],
+
+      elapsedTime: 0,
+
+      currentNightFactor: 0,
+
+      levelIndex: 0,
+
+      levelTheme: 0,
+
+      mode: "levels",
+
+      lives: 3,
+
+      finalGameOver: false,
+
+      gameComplete: false,
+
+      shielded: false,
+
+      attacking: false,
+
+      attackTimer: 0,
+
+      attackCooldown: 0,
+
+      levelPlatforms: [],
+
+      levelCoins: [],
+
+      levelEnemies: [],
+
+      levelPowerUps: [],
+
+      powerUps: [],
+
+      boss: null,
+
+      checkpointX: null,
+
+      levelCheckpointX: null,
+
+      hitThisLevel: false,
+
+      beginNewRun(startLevel) {
+
+        this.lives = 3;
+        this.score = 0;
+        this.coinsCollected = 0;
+        this.levelIndex = startLevel || 0;
+        this.mode = "levels";
+        this.gameComplete = false;
+        this.finalGameOver = false;
+        this.checkpointX = null;
+        this.hitThisLevel = false;
+      },
+
+      beginEndlessRun() {
+
+        this.lives = 3;
+        this.score = 0;
+        this.coinsCollected = 0;
+        this.levelIndex = 0;
+        this.mode = "endless";
+        this.gameComplete = false;
+        this.finalGameOver = false;
+        this.checkpointX = null;
+        this.hitThisLevel = false;
+      },
+
+      updateHighScore() {
+
+        if (this.score > this.highScore) {
+
+          this.highScore = this.score;
+
+          SaveSystem.data.highScore = this.highScore;
+
+          SaveSystem.save();
+        }
+      },
+
+      highScore: SaveSystem.data.highScore,
+
+      init() {
+
+        if (this.finalGameOver) {
+          this.lives = 3;
+          this.score = 0;
+          this.coinsCollected = 0;
+          this.levelIndex = 0;
+          this.mode = "levels";
+          this.finalGameOver = false;
+          this.checkpointX = null;
+          this.hitThisLevel = false;
+        }
+
+        const levelData =
+          this.mode === "endless"
+            ? buildEndlessLevel(this.levelIndex)
+            : buildLevel(this.levelIndex);
+
+        this.worldWidth =
+          levelData.worldWidth;
+
+        this.levelPlatforms =
+          levelData.platforms;
+
+        this.levelCoins =
+          levelData.coins;
+
+        this.levelEnemies =
+          levelData.enemies;
+
+        this.levelPowerUps =
+          levelData.powerUps;
+
+        this.boss =
+          levelData.boss || null;
+
+        this.levelTheme =
+          levelData.theme || 0;
+
+        this.levelCheckpointX =
+          levelData.checkpoint
+            ? levelData.checkpoint.x
+            : null;
+
+        this.shielded =
+          false;
+
+        this.attacking =
+          false;
+
+        this.attackTimer =
+          0;
+
+        this.attackCooldown =
+          0;
+
+        this.player = {
+          x: this.checkpointX !== null ? this.checkpointX : 30,
+          y: 180,
+          width: 16,
+          height: 20
+        };
+
+        this.animator =
+          new SpriteAnimator(
+            (SaveSystem.data.unlockedCharacter &&
+              SaveSystem.data.selectedCharacter === "voidknight")
+              ? voidKnightSheet
+              : rabbitSheet,
+            rabbitAnimations
+          );
+
+        this.cameraX =
+          0;
+
+        this.velocityY =
+          0;
+
+        this.grounded =
+          false;
+
+        this.gameOver =
+          false;
+
+        this.won =
+          false;
+
+        this.shake =
+          0;
+
+        this.hitFlash =
+          0;
+
+        this.landingSquash =
+          0;
+
+        this.dustTimer =
+          0;
+
+        this.birds = [
+          {
+            offset: 10,
+            speed: 26,
+            y: 24
+          },
+          {
+            offset: 110,
+            speed: 19,
+            y: 42
+          },
+          {
+            offset: 200,
+            speed: 31,
+            y: 18
+          },
+          {
+            offset: 250,
+            speed: 22,
+            y: 55
+          }
+        ];
+
+        this.elapsedTime =
+          0;
+
+        this.stars = [];
+
+        for (
+          let i = 0;
+          i < 46;
+          i++
+        ) {
+
+          this.stars.push({
+            x:
+              pseudoNoise(
+                i * 3.31
+              ) *
+              256,
+            y:
+              pseudoNoise(
+                i * 7.77
+              ) *
+              130,
+            phase:
+              pseudoNoise(
+                i * 1.13
+              ) *
+              10,
+            size:
+              pseudoNoise(
+                i * 5.5
+              ) >
+              0.85
+                ? 1.6
+                : 1
+          });
+        }
+
+        this.fireflies = [];
+
+        for (
+          let i = 0;
+          i < 7;
+          i++
+        ) {
+
+          this.fireflies.push({
+            baseX:
+              pseudoNoise(
+                i * 9.1
+              ) *
+              this.worldWidth,
+            baseY:
+              150 +
+              pseudoNoise(
+                i * 4.4
+              ) *
+              45,
+            phase:
+              i * 1.7,
+            speed:
+              0.6 +
+              pseudoNoise(
+                i * 2.2
+              ) *
+              0.8
+          });
+        }
+
+        Particles.clear();
+
+        this.platforms =
+          this.levelPlatforms;
+
+        this.coins =
+          this.levelCoins;
+
+        this.enemies =
+          this.levelEnemies;
+
+        this.powerUps =
+          this.levelPowerUps;
+
+        gameStatus.textContent =
+          this.mode === "endless"
+            ? "ENDLESS #" +
+              (this.levelIndex + 1) +
+              " · ♥" +
+              this.lives
+            : "LEVEL " +
+              (this.levelIndex + 1) +
+              " / " +
+              LEVEL_COUNT +
+              " · ♥" +
+              this.lives;
+      },
+
+      update(
+        delta
+      ) {
+
+        this.elapsedTime +=
+          delta;
+
+        if (
+          this.shake >
+          0
+        ) {
+
+          this.shake =
+            Math.max(
+              0,
+              this.shake -
+              delta * 4
+            );
+        }
+
+        if (
+          this.hitFlash >
+          0
+        ) {
+
+          this.hitFlash =
+            Math.max(
+              0,
+              this.hitFlash -
+              delta * 2.2
+            );
+        }
+
+        this.landingSquash +=
+          (
+            0 -
+            this.landingSquash
+          ) *
+          Math.min(
+            1,
+            delta * 10
+          );
+
+        if (
+          this.dustTimer >
+          0
+        ) {
+
+          this.dustTimer -=
+            delta;
+        }
+
+        if (
+          this.gameOver ||
+          this.won
+        ) {
+
+          this.animator.setAnimation(
+            "idle"
+          );
+
+          this.animator.update(
+            delta
+          );
+
+          return;
+        }
+
+        const previousY =
+          this.player.y;
+
+        const previousBottom =
+          previousY +
+          this.player.height;
+
+        const moveSpeed =
+          105;
+
+        if (
+          input.left
+        ) {
+
+          this.player.x -=
+            moveSpeed *
+            delta;
+
+          this.animator.flipX =
+            true;
+        }
+
+        if (
+          input.right
+        ) {
+
+          this.player.x +=
+            moveSpeed *
+            delta;
+
+          this.animator.flipX =
+            false;
+        }
+
+        this.player.x =
+          Math.max(
+            0,
+            Math.min(
+              this.worldWidth -
+                this.player.width,
+              this.player.x
+            )
+          );
+
+        if (
+          (
+            input.a ||
+            input.up
+          ) &&
+          this.grounded
+        ) {
+
+          this.velocityY =
+            -190;
+
+          this.grounded =
+            false;
+
+          this.landingSquash =
+            -0.6;
+
+          AudioEngine.play("jump");
+
+          this.spawnDust(
+            this.player.x +
+              this.player.width /
+              2,
+            this.player.y +
+              this.player.height,
+            4,
+            30,
+            70
+          );
+
+          input.a =
+            false;
+
+          input.up =
+            false;
+        }
+
+        this.velocityY +=
+          500 *
+          delta;
+
+        this.player.y +=
+          this.velocityY *
+          delta;
+
+        const currentBottom =
+          this.player.y +
+          this.player.height;
+
+        const wasGrounded =
+          this.grounded;
+
+        this.grounded =
+          false;
+
+        for (
+          const platform of
+          this.platforms
+        ) {
+
+          const horizontalCollision =
+            this.player.x +
+              this.player.width >
+              platform.x &&
+            this.player.x <
+              platform.x +
+              platform.width;
+
+          const crossedTop =
+            previousBottom <=
+              platform.y &&
+            currentBottom >=
+              platform.y;
+
+          if (
+            this.velocityY >= 0 &&
+            horizontalCollision &&
+            crossedTop
+          ) {
+
+            this.player.y =
+              platform.y -
+              this.player.height;
+
+            this.velocityY =
+              0;
+
+            this.grounded =
+              true;
+
+            break;
+          }
+        }
+
+        if (
+          !wasGrounded &&
+          this.grounded
+        ) {
+
+          this.landingSquash =
+            1;
+
+          this.spawnDust(
+            this.player.x +
+              this.player.width /
+              2,
+            this.player.y +
+              this.player.height,
+            7,
+            42,
+            95
+          );
+        }
+
+        if (
+          this.grounded
+        ) {
+
+          if (
+            input.left ||
+            input.right
+          ) {
+
+            this.animator.setAnimation(
+              "run"
+            );
+
+            if (
+              this.dustTimer <=
+              0
+            ) {
+
+              this.spawnDust(
+                this.player.x +
+                  (
+                    this.animator.flipX
+                      ? this.player.width
+                      : 0
+                  ),
+                this.player.y +
+                  this.player.height,
+                1,
+                14,
+                40
+              );
+
+              this.dustTimer =
+                0.14;
+            }
+
+          } else {
+
+            this.animator.setAnimation(
+              "idle"
+            );
+          }
+
+        } else {
+
+          if (
+            this.velocityY < 0
+          ) {
+
+            this.animator.setAnimation(
+              "jump"
+            );
+
+          } else {
+
+            this.animator.setAnimation(
+              "fall"
+            );
+          }
+        }
+
+        this.animator.update(
+          delta
+        );
+
+        this.updateEnemies(
+          delta
+        );
+
+        this.collectCoins();
+
+        this.collectPowerUps();
+
+        this.updateAttack(
+          delta
+        );
+
+        this.checkEnemyCollisions();
+
+        this.updateBoss(delta);
+
+        this.checkCheckpoint();
+
+        if (
+          this.player.y >
+          280
+        ) {
+
+          if (
+            !this.gameOver
+          ) {
+
+            this.shake =
+              0.4;
+
+            this.hitThisLevel =
+              true;
+
+            SaveSystem.data.totalDeaths++;
+
+            SaveSystem.save();
+
+            AudioEngine.play(
+              this.lives <= 1 ? "gameOver" : "hit"
+            );
+
+            this.lives =
+              Math.max(
+                0,
+                this.lives - 1
+              );
+
+            if (
+              this.lives <= 0
+            ) {
+
+              this.finalGameOver =
+                true;
+
+              this.updateHighScore();
+            }
+          }
+
+          this.gameOver =
+            true;
+
+          gameStatus.textContent =
+            this.finalGameOver
+              ? "GAME OVER · PRESS A"
+              : "FELL · " + this.lives + " ♥ LEFT · PRESS A";
+        }
+
+        const bossBlocking =
+          !!(this.boss && this.boss.alive);
+
+        if (
+          this.player.x >
+          this.worldWidth -
+          80 &&
+          !bossBlocking
+        ) {
+
+          if (
+            !this.won
+          ) {
+
+            this.won =
+              true;
+
+            this.updateHighScore();
+
+            if (this.score >= 5000) {
+              unlockAchievement("high_score_5000");
+            }
+
+            if (!this.hitThisLevel && this.mode === "levels") {
+              unlockAchievement("no_death_level");
+            }
+
+            AudioEngine.play("levelComplete");
+
+            if (this.mode === "levels") {
+
+              if (this.levelIndex === 0) {
+                unlockAchievement("level_1_clear");
+              }
+
+              if (this.levelIndex + 1 > SaveSystem.data.unlockedLevel) {
+                SaveSystem.data.unlockedLevel = Math.min(
+                  this.levelIndex + 1,
+                  LEVEL_COUNT - 1
+                );
+              }
+
+              SaveSystem.save();
+            }
+
+            if (
+              this.mode === "levels" &&
+              this.levelIndex + 1 >= LEVEL_COUNT
+            ) {
+
+              this.gameComplete =
+                true;
+
+              SaveSystem.data.allLevelsCleared = true;
+              SaveSystem.data.unlockedLevel = LEVEL_COUNT - 1;
+
+              if (!SaveSystem.data.unlockedCharacter) {
+                SaveSystem.data.unlockedCharacter = true;
+              }
+
+              SaveSystem.save();
+              unlockAchievement("campaign_clear");
+              unlockAchievement("character_unlock");
+
+              gameStatus.textContent =
+                "VICTORY! ALL LEVELS CLEAR";
+
+            } else if (
+              this.mode === "endless"
+            ) {
+
+              if (this.levelIndex + 1 > SaveSystem.data.endlessBest) {
+                SaveSystem.data.endlessBest = this.levelIndex + 1;
+                SaveSystem.save();
+              }
+
+              if (this.levelIndex + 1 >= 10) {
+                unlockAchievement("endless_10");
+              }
+
+              gameStatus.textContent =
+                "CHUNK CLEAR · SCORE " + this.score;
+
+            } else {
+
+              gameStatus.textContent =
+                "LEVEL COMPLETE";
+            }
+          }
+        }
+
+        const targetCamera =
+          this.player.x -
+          90;
+
+        this.cameraX +=
+          (
+            targetCamera -
+            this.cameraX
+          ) *
+          Math.min(
+            1,
+            delta * 6
+          );
+
+        this.cameraX =
+          Math.max(
+            0,
+            Math.min(
+              this.worldWidth -
+                256,
+              this.cameraX
+            )
+          );
+
+        if (
+          !this.gameOver &&
+          !this.won
+        ) {
+
+          gameStatus.textContent =
+            "COINS " +
+            this.coinsCollected +
+            " · SCORE " +
+            this.score;
+        }
+      },
+
+      updateEnemies(
+        delta
+      ) {
+
+        for (
+          const enemy of
+          this.enemies
+        ) {
+
+          if (
+            !enemy.alive
+          ) {
+            continue;
+          }
+
+          if (enemy.hitFlash > 0) {
+            enemy.hitFlash =
+              Math.max(0, enemy.hitFlash - delta * 3);
+          }
+
+          enemy.x +=
+            enemy.direction *
+            enemy.speed *
+            delta;
+
+          if (
+            enemy.x <=
+            enemy.minX
+          ) {
+
+            enemy.x =
+              enemy.minX;
+
+            enemy.direction =
+              1;
+          }
+
+          if (
+            enemy.x >=
+            enemy.maxX
+          ) {
+
+            enemy.x =
+              enemy.maxX;
+
+            enemy.direction =
+              -1;
+          }
+
+          if (enemy.type === "bat") {
+
+            enemy.y =
+              enemy.baseY +
+              Math.sin(
+                this.elapsedTime * enemy.flyFreq +
+                  enemy.flyPhase
+              ) *
+              enemy.flyAmp;
+          }
+        }
+      },
+
+      updateBoss(delta) {
+
+        if (!this.boss) {
+          return;
+        }
+
+        if (this.boss.hitFlash > 0) {
+          this.boss.hitFlash = Math.max(0, this.boss.hitFlash - delta * 3);
+        }
+
+        if (!this.boss.alive) {
+          return;
+        }
+
+        this.boss.x += this.boss.direction * this.boss.speed * delta;
+
+        if (this.boss.x <= this.boss.minX) {
+          this.boss.x = this.boss.minX;
+          this.boss.direction = 1;
+        }
+
+        if (this.boss.x >= this.boss.maxX) {
+          this.boss.x = this.boss.maxX;
+          this.boss.direction = -1;
+        }
+
+        const barrierX = this.boss.x - 14;
+
+        if (this.player.x > barrierX) {
+          this.player.x = barrierX;
+        }
+
+        const collision =
+          this.player.x < this.boss.x + this.boss.width &&
+          this.player.x + this.player.width > this.boss.x &&
+          this.player.y < this.boss.y + this.boss.height &&
+          this.player.y + this.player.height > this.boss.y;
+
+        if (!collision || this.gameOver) {
+          return;
+        }
+
+        const playerBottom = this.player.y + this.player.height;
+
+        if (this.velocityY > 0 && playerBottom < this.boss.y + 14) {
+
+          this.velocityY = -125;
+          this.damageBoss();
+          return;
+        }
+
+        if (this.shielded) {
+
+          this.shielded = false;
+          this.velocityY = -140;
+          this.hitFlash = 0.3;
+          this.damageBoss();
+          return;
+        }
+
+        this.shake = 0.35;
+        this.hitFlash = 0.55;
+        this.hitThisLevel = true;
+
+        SaveSystem.data.totalDeaths++;
+        SaveSystem.save();
+
+        AudioEngine.play(this.lives <= 1 ? "gameOver" : "hit");
+
+        this.lives = Math.max(0, this.lives - 1);
+
+        if (this.lives <= 0) {
+          this.finalGameOver = true;
+          this.updateHighScore();
+        }
+
+        this.gameOver = true;
+
+        gameStatus.textContent = this.finalGameOver
+          ? "GAME OVER · PRESS A"
+          : "BOSS HIT · " + this.lives + " ♥ LEFT · PRESS A";
+      },
+
+      checkCheckpoint() {
+
+        if (
+          !this.levelCheckpointX ||
+          this.checkpointX !== null
+        ) {
+          return;
+        }
+
+        if (this.player.x > this.levelCheckpointX) {
+
+          this.checkpointX = this.levelCheckpointX;
+
+          AudioEngine.play("checkpoint");
+          showToast("🏰 CHECKPOINT", "Postup v levelu uložen pro tento pokus.");
+
+          Particles.spawnBurst(
+            this.player.x,
+            this.player.y,
+            10,
+            ["#4fd6ff", "#a8f0ff", "#ffffff"],
+            50,
+            60
+          );
+        }
+      },
+
+      collectCoins() {
+
+        for (
+          const coin of
+          this.coins
+        ) {
+
+          if (
+            coin.collected
+          ) {
+            continue;
+          }
+
+          const centerX =
+            this.player.x +
+            this.player.width /
+            2;
+
+          const centerY =
+            this.player.y +
+            this.player.height /
+            2;
+
+          const distance =
+            Math.hypot(
+              centerX -
+                coin.x,
+              centerY -
+                coin.y
+            );
+
+          if (
+            distance <
+            16
+          ) {
+
+            coin.collected =
+              true;
+
+            this.coinsCollected++;
+
+            this.score +=
+              100;
+
+            AudioEngine.play("coin");
+
+            SaveSystem.data.totalCoins++;
+
+            unlockAchievement("first_coin");
+
+            if (SaveSystem.data.totalCoins >= 100) {
+              unlockAchievement("coin_collector");
+            }
+
+            SaveSystem.save();
+
+            Particles.spawnBurst(
+              coin.x,
+              coin.y,
+              8,
+              [
+                "#ff3d5f",
+                "#c8203f",
+                "#ffd9e0"
+              ],
+              55,
+              80
+            );
+          }
+        }
+      },
+
+      collectPowerUps() {
+
+        for (
+          const powerUp of
+          this.powerUps
+        ) {
+
+          if (
+            powerUp.collected
+          ) {
+            continue;
+          }
+
+          const centerX =
+            this.player.x +
+            this.player.width /
+            2;
+
+          const centerY =
+            this.player.y +
+            this.player.height /
+            2;
+
+          const distance =
+            Math.hypot(
+              centerX -
+                powerUp.x,
+              centerY -
+                powerUp.y
+            );
+
+          if (
+            distance <
+            16
+          ) {
+
+            powerUp.collected =
+              true;
+
+            this.shielded =
+              true;
+
+            this.score +=
+              150;
+
+            AudioEngine.play("powerup");
+
+            Particles.spawnBurst(
+              powerUp.x,
+              powerUp.y,
+              12,
+              [
+                "#4fd6ff",
+                "#a8f0ff",
+                "#0f6a8a"
+              ],
+              60,
+              75
+            );
+          }
+        }
+      },
+
+      updateAttack(
+        delta
+      ) {
+
+        if (
+          this.attackCooldown > 0
+        ) {
+
+          this.attackCooldown =
+            Math.max(
+              0,
+              this.attackCooldown - delta
+            );
+        }
+
+        if (
+          this.attackTimer > 0
+        ) {
+
+          this.attackTimer =
+            Math.max(
+              0,
+              this.attackTimer - delta
+            );
+
+          if (
+            this.attackTimer === 0
+          ) {
+
+            this.attacking =
+              false;
+          }
+        }
+
+        if (
+          !attackPressed
+        ) {
+          return;
+        }
+
+        attackPressed =
+          false;
+
+        if (
+          this.attackCooldown > 0
+        ) {
+          return;
+        }
+
+        this.attacking =
+          true;
+
+        AudioEngine.play("attack");
+
+        this.attackTimer =
+          0.18;
+
+        this.attackCooldown =
+          0.32;
+
+        const facing =
+          this.animator.flipX
+            ? -1
+            : 1;
+
+        const reach = 20;
+
+        const attackX =
+          facing === 1
+            ? this.player.x + this.player.width
+            : this.player.x - reach;
+
+        const attackBox = {
+          x: attackX,
+          y: this.player.y - 4,
+          width: reach,
+          height: this.player.height + 8
+        };
+
+        Particles.spawnBurst(
+          this.player.x +
+            this.player.width / 2 +
+            facing * 10,
+          this.player.y +
+            this.player.height / 2,
+          6,
+          [
+            "#e8e8e8",
+            "#c8c8c8",
+            "#8899aa"
+          ],
+          50,
+          60
+        );
+
+        for (
+          const enemy of
+          this.enemies
+        ) {
+
+          if (
+            !enemy.alive
+          ) {
+            continue;
+          }
+
+          const hit =
+            attackBox.x <
+              enemy.x + enemy.width &&
+            attackBox.x + attackBox.width >
+              enemy.x &&
+            attackBox.y <
+              enemy.y + enemy.height &&
+            attackBox.y + attackBox.height >
+              enemy.y;
+
+          if (
+            !hit
+          ) {
+            continue;
+          }
+
+          enemy.alive =
+            false;
+
+          this.score +=
+            200;
+
+          Particles.spawnBurst(
+            enemy.x + enemy.width / 2,
+            enemy.y + enemy.height / 2,
+            10,
+            [
+              "#7f5539",
+              "#b08968",
+              "#5c3d2e"
+            ],
+            45,
+            60
+          );
+        }
+
+        if (
+          this.boss &&
+          this.boss.alive
+        ) {
+
+          const bossHit =
+            attackBox.x < this.boss.x + this.boss.width &&
+            attackBox.x + attackBox.width > this.boss.x &&
+            attackBox.y < this.boss.y + this.boss.height &&
+            attackBox.y + attackBox.height > this.boss.y;
+
+          if (bossHit) {
+            this.damageBoss();
+          }
+        }
+      },
+
+      damageBoss() {
+
+        if (!this.boss || !this.boss.alive) {
+          return;
+        }
+
+        this.boss.hp -= 1;
+        this.boss.hitFlash = 0.25;
+        this.score += 150;
+
+        Particles.spawnBurst(
+          this.boss.x + this.boss.width / 2,
+          this.boss.y + this.boss.height / 2,
+          12,
+          ["#4a2233", "#c8203f", "#ffd9e0"],
+          55,
+          65
+        );
+
+        AudioEngine.play("bossHit");
+
+        if (this.boss.hp <= 0) {
+
+          this.boss.alive = false;
+          this.score += 1000;
+
+          SaveSystem.data.bossDefeated = true;
+          SaveSystem.save();
+          unlockAchievement("boss_slayer");
+
+          AudioEngine.play("bossDefeat");
+
+          Particles.spawnBurst(
+            this.boss.x + this.boss.width / 2,
+            this.boss.y + this.boss.height / 2,
+            30,
+            ["#4a2233", "#c8203f", "#ffd9e0", "#4fd6ff"],
+            90,
+            90
+          );
+        }
+      },
+
+      spawnDust(
+        x,
+        y,
+        count,
+        speed,
+        gravity
+      ) {
+
+        Particles.spawnBurst(
+          x,
+          y,
+          count,
+          [
+            "#e8d9c0",
+            "#d8c3a5",
+            "#c9b28f"
+          ],
+          speed,
+          gravity
+        );
+      },
+
+      checkEnemyCollisions() {
+
+        for (
+          const enemy of
+          this.enemies
+        ) {
+
+          if (
+            !enemy.alive
+          ) {
+            continue;
+          }
+
+          const collision =
+            this.player.x <
+              enemy.x +
+              enemy.width &&
+            this.player.x +
+              this.player.width >
+              enemy.x &&
+            this.player.y <
+              enemy.y +
+              enemy.height &&
+            this.player.y +
+              this.player.height >
+              enemy.y;
+
+          if (
+            !collision
+          ) {
+            continue;
+          }
+
+          const playerBottom =
+            this.player.y +
+            this.player.height;
+
+          const enemyTop =
+            enemy.y;
+
+          if (
+            this.velocityY > 0 &&
+            playerBottom <
+              enemyTop +
+              12
+          ) {
+
+            this.velocityY =
+              -125;
+
+            if (enemy.type === "brute" && enemy.hp > 1) {
+
+              enemy.hp -= 1;
+              enemy.hitFlash = 0.25;
+              this.score += 80;
+
+              Particles.spawnBurst(
+                enemy.x + enemy.width / 2,
+                enemy.y + enemy.height / 2,
+                6,
+                ["#7f5539", "#b08968"],
+                40,
+                55
+              );
+
+            } else {
+
+              enemy.alive =
+                false;
+
+              this.score +=
+                enemy.type === "brute" ? 260 :
+                enemy.type === "bat" ? 220 :
+                enemy.type === "specter" ? 240 : 200;
+
+              Particles.spawnBurst(
+                enemy.x +
+                  enemy.width /
+                  2,
+                enemy.y +
+                  enemy.height /
+                  2,
+                10,
+                [
+                  "#7f5539",
+                  "#b08968",
+                  "#5c3d2e"
+                ],
+                45,
+                60
+              );
+            }
+
+          } else if (
+            this.shielded
+          ) {
+
+            this.shielded =
+              false;
+
+            enemy.alive =
+              false;
+
+            this.velocityY =
+              -140;
+
+            this.hitFlash =
+              0.3;
+
+            Particles.spawnBurst(
+              enemy.x +
+                enemy.width /
+                2,
+              enemy.y +
+                enemy.height /
+                2,
+              12,
+              [
+                "#4fd6ff",
+                "#a8f0ff",
+                "#0f6a8a"
+              ],
+              60,
+              70
+            );
+
+          } else {
+
+            if (
+              !this.gameOver
+            ) {
+
+              this.shake =
+                0.3;
+
+              this.hitFlash =
+                0.55;
+
+              this.hitThisLevel =
+                true;
+
+              SaveSystem.data.totalDeaths++;
+
+              SaveSystem.save();
+
+              AudioEngine.play(
+                this.lives <= 1 ? "gameOver" : "hit"
+              );
+
+              this.lives =
+                Math.max(
+                  0,
+                  this.lives - 1
+                );
+
+              if (
+                this.lives <= 0
+              ) {
+
+                this.finalGameOver =
+                  true;
+
+                this.updateHighScore();
+              }
+            }
+
+            this.gameOver =
+              true;
+
+            gameStatus.textContent =
+              this.finalGameOver
+                ? "GAME OVER · PRESS A"
+                : "HIT · " + this.lives + " ♥ LEFT · PRESS A";
+          }
+        }
+      },
+
+      render() {
+
+        ctx.save();
+
+        if (
+          this.shake >
+          0
+        ) {
+
+          const magnitude =
+            this.shake *
+            4;
+
+          ctx.translate(
+            (
+              Math.random() -
+              0.5
+            ) *
+            magnitude,
+            (
+              Math.random() -
+              0.5
+            ) *
+            magnitude
+          );
+        }
+
+        this.drawBackground();
+
+        ctx.save();
+
+        ctx.translate(
+          -Math.floor(
+            this.cameraX
+          ),
+          0
+        );
+
+        this.drawPlatforms();
+
+        this.drawCheckpointFlag();
+
+        this.drawGoalFlag();
+
+        this.drawCoins();
+
+        this.drawPowerUps();
+
+        this.drawEnemies();
+
+        this.drawBoss();
+
+        this.drawPlayerShadow();
+
+        if (
+          this.currentNightFactor >
+          0.35
+        ) {
+
+          this.drawPlayerGlow();
+        }
+
+        const squashY =
+          1 -
+          this.landingSquash *
+          0.3;
+
+        const squashX =
+          1 +
+          this.landingSquash *
+          0.15;
+
+        const anchorX =
+          this.player.x +
+          this.player.width /
+          2;
+
+        const anchorY =
+          this.player.y +
+          this.player.height;
+
+        ctx.save();
+
+        ctx.translate(
+          anchorX,
+          anchorY
+        );
+
+        ctx.scale(
+          squashX,
+          squashY
+        );
+
+        ctx.translate(
+          -anchorX,
+          -anchorY
+        );
+
+        this.animator.draw(
+          this.player.x,
+          this.player.y
+        );
+
+        ctx.restore();
+
+        this.drawAttack();
+
+        Particles.render();
+
+        ctx.restore();
+
+        ctx.restore();
+
+        this.drawHitFlash();
+
+        this.drawVignette();
+
+        this.drawHud();
+
+        this.drawScanlines();
+
+        if (
+          this.gameOver
+        ) {
+
+          drawOverlay(
+            this.finalGameOver
+              ? "GAME OVER"
+              : "HIT!",
+            this.finalGameOver
+              ? "PRESS A · NEW GAME"
+              : "PRESS A · " + this.lives + " LIVES LEFT"
+          );
+        }
+
+        if (
+          this.won
+        ) {
+
+          drawOverlay(
+            this.gameComplete
+              ? "VICTORY!"
+              : "LEVEL COMPLETE",
+            this.gameComplete
+              ? "PRESS A → ENDLESS MODE"
+              : "PRESS A TO CONTINUE"
+          );
+        }
+      },
+
+      drawAttack() {
+
+        if (
+          !this.attacking
+        ) {
+          return;
+        }
+
+        const progress =
+          1 -
+          this.attackTimer / 0.18;
+
+        const facing =
+          this.animator.flipX
+            ? -1
+            : 1;
+
+        const originX =
+          this.player.x +
+          this.player.width / 2 +
+          facing * (this.player.width / 2);
+
+        const originY =
+          this.player.y +
+          this.player.height / 2;
+
+        const alpha =
+          Math.max(
+            0,
+            1 - progress
+          );
+
+        ctx.save();
+
+        ctx.strokeStyle =
+          "rgba(230,236,245," + alpha + ")";
+
+        ctx.lineWidth = 2;
+
+        ctx.shadowBlur = 6;
+
+        ctx.shadowColor =
+          "rgba(200,220,255,0.8)";
+
+        ctx.beginPath();
+
+        const startAngle =
+          facing === 1 ? -0.9 : Math.PI - 0.9;
+
+        const endAngle =
+          facing === 1 ? 0.9 : Math.PI + 0.9;
+
+        ctx.arc(
+          originX,
+          originY,
+          16,
+          startAngle,
+          endAngle
+        );
+
+        ctx.stroke();
+
+        ctx.restore();
+      },
+
+      drawPlayerShadow() {
+
+        const groundY =
+          this.player.y +
+          this.player.height +
+          1;
+
+        const shadowScale =
+          Math.max(
+            0.3,
+            1 -
+            (
+              280 -
+              groundY
+            ) /
+            280
+          );
+
+        ctx.fillStyle =
+          "rgba(0,0,0,0.22)";
+
+        ctx.beginPath();
+
+        ctx.ellipse(
+          this.player.x +
+            this.player.width /
+            2,
+          Math.min(
+            groundY,
+            230
+          ),
+          7 *
+            shadowScale,
+          2.4 *
+            shadowScale,
+          0,
+          0,
+          Math.PI *
+            2
+        );
+
+        ctx.fill();
+      },
+
+      drawPlayerGlow() {
+
+        const centerX =
+          this.player.x +
+          this.player.width /
+          2;
+
+        const centerY =
+          this.player.y +
+          this.player.height /
+          2;
+
+        ctx.save();
+
+        ctx.globalCompositeOperation =
+          "lighter";
+
+        const glow =
+          ctx.createRadialGradient(
+            centerX,
+            centerY,
+            1,
+            centerX,
+            centerY,
+            26
+          );
+
+        glow.addColorStop(
+          0,
+          "rgba(255,236,180," +
+            (
+              this.currentNightFactor *
+              0.35
+            ) +
+            ")"
+        );
+
+        glow.addColorStop(
+          1,
+          "rgba(255,236,180,0)"
+        );
+
+        ctx.fillStyle =
+          glow;
+
+        ctx.fillRect(
+          centerX - 26,
+          centerY - 26,
+          52,
+          52
+        );
+
+        ctx.restore();
+      },
+
+      drawBackground() {
+
+        const DAY_CYCLE =
+          48;
+
+        const phase =
+          (
+            this.elapsedTime %
+            DAY_CYCLE
+          ) /
+          DAY_CYCLE;
+
+        const altitude =
+          Math.sin(
+            phase *
+            Math.PI *
+            2
+          );
+
+        const nightFactor =
+          Math.max(
+            0,
+            Math.min(
+              1,
+              -altitude *
+              1.35
+            )
+          );
+
+        const horizonGlow =
+          Math.max(
+            0,
+            1 -
+            Math.abs(
+              altitude
+            ) *
+            1.8
+          );
+
+        this.currentNightFactor =
+          nightFactor;
+
+        // -------------------------------------------------
+        // Nebe - základní denní gradient
+        // -------------------------------------------------
+        const skyGradient =
+          ctx.createLinearGradient(
+            0,
+            0,
+            0,
+            240
+          );
+
+        skyGradient.addColorStop(
+          0,
+          "#3d0f1f"
+        );
+
+        skyGradient.addColorStop(
+          0.55,
+          "#a83450"
+        );
+
+        skyGradient.addColorStop(
+          1,
+          "#e8a8ac"
+        );
+
+        ctx.fillStyle =
+          skyGradient;
+
+        ctx.fillRect(
+          0,
+          0,
+          256,
+          240
+        );
+
+        // -------------------------------------------------
+        // Noční ztmavení oblohy
+        // -------------------------------------------------
+        if (
+          nightFactor >
+          0.01
+        ) {
+
+          ctx.fillStyle =
+            "rgba(10,4,16," +
+            (
+              nightFactor *
+              0.82
+            ) +
+            ")";
+
+          ctx.fillRect(
+            0,
+            0,
+            256,
+            240
+          );
+        }
+
+        // -------------------------------------------------
+        // Teplá záře úsvitu / soumraku u horizontu
+        // -------------------------------------------------
+        if (
+          horizonGlow >
+          0.02
+        ) {
+
+          const glowGradient =
+            ctx.createLinearGradient(
+              0,
+              90,
+              0,
+              210
+            );
+
+          glowGradient.addColorStop(
+            0,
+            "rgba(255,150,90,0)"
+          );
+
+          glowGradient.addColorStop(
+            1,
+            "rgba(255,120,70," +
+              (
+                horizonGlow *
+                0.55
+              ) +
+              ")"
+          );
+
+          ctx.fillStyle =
+            glowGradient;
+
+          ctx.fillRect(
+            0,
+            0,
+            256,
+            240
+          );
+        }
+
+        this.drawStars(
+          nightFactor
+        );
+
+        this.drawCelestialBodies(
+          phase,
+          altitude,
+          horizonGlow
+        );
+
+        // -------------------------------------------------
+        // Vzdálené věže zámku (parallax 0.1)
+        // -------------------------------------------------
+        ctx.fillStyle =
+          "#3a1a2a";
+
+        for (
+          let i = -1;
+          i < 6;
+          i++
+        ) {
+
+          const baseX =
+            i * 140 -
+            (
+              this.cameraX *
+              0.1
+            ) %
+            140;
+
+          ctx.beginPath();
+
+          ctx.moveTo(
+            baseX,
+            150
+          );
+
+          ctx.lineTo(
+            baseX + 25,
+            110
+          );
+
+          ctx.lineTo(
+            baseX + 32,
+            125
+          );
+
+          ctx.lineTo(
+            baseX + 42,
+            88
+          );
+
+          ctx.lineTo(
+            baseX + 50,
+            118
+          );
+
+          ctx.lineTo(
+            baseX + 70,
+            100
+          );
+
+          ctx.lineTo(
+            baseX + 92,
+            122
+          );
+
+          ctx.lineTo(
+            baseX + 100,
+            95
+          );
+
+          ctx.lineTo(
+            baseX + 112,
+            128
+          );
+
+          ctx.lineTo(
+            baseX + 140,
+            150
+          );
+
+          ctx.closePath();
+
+          ctx.fill();
+        }
+
+        // -------------------------------------------------
+        // Bližší hradby a věže trosek (parallax 0.2)
+        // -------------------------------------------------
+        ctx.fillStyle =
+          "#2b1220";
+
+        for (
+          let i = -1;
+          i < 5;
+          i++
+        ) {
+
+          const baseX =
+            i * 180 -
+            (
+              this.cameraX *
+              0.2
+            ) %
+            180;
+
+          ctx.fillRect(
+            baseX,
+            140,
+            180,
+            20
+          );
+
+          ctx.fillRect(
+            baseX + 20,
+            108,
+            14,
+            32
+          );
+
+          ctx.beginPath();
+
+          ctx.moveTo(
+            baseX + 18,
+            108
+          );
+
+          ctx.lineTo(
+            baseX + 27,
+            92
+          );
+
+          ctx.lineTo(
+            baseX + 36,
+            108
+          );
+
+          ctx.closePath();
+
+          ctx.fill();
+
+          ctx.fillRect(
+            baseX + 90,
+            118,
+            12,
+            22
+          );
+
+          ctx.beginPath();
+
+          ctx.moveTo(
+            baseX + 88,
+            118
+          );
+
+          ctx.lineTo(
+            baseX + 96,
+            104
+          );
+
+          ctx.lineTo(
+            baseX + 104,
+            118
+          );
+
+          ctx.closePath();
+
+          ctx.fill();
+
+          ctx.fillRect(
+            baseX + 140,
+            122,
+            10,
+            18
+          );
+        }
+
+        if (
+          nightFactor <
+          0.55
+        ) {
+
+          this.drawBirds();
+        }
+
+        // -------------------------------------------------
+        // Mraky (parallax 0.25) - více kruhů pro měkký tvar
+        // -------------------------------------------------
+        ctx.fillStyle =
+          "rgba(190,120,140,0.5)";
+
+        for (
+          let x = 10;
+          x < this.worldWidth + 256;
+          x += 95
+        ) {
+
+          const screenX =
+            x -
+            this.cameraX *
+            0.25;
+
+          if (
+            screenX <
+              -40 ||
+            screenX >
+              280
+          ) {
+            continue;
+          }
+
+          const bob =
+            pseudoNoise(
+              x
+            ) *
+            10;
+
+          const cloudY =
+            30 +
+            bob;
+
+          ctx.beginPath();
+
+          ctx.arc(
+            screenX,
+            cloudY,
+            9,
+            0,
+            Math.PI *
+              2
+          );
+
+          ctx.arc(
+            screenX + 10,
+            cloudY - 4,
+            11,
+            0,
+            Math.PI *
+              2
+          );
+
+          ctx.arc(
+            screenX + 22,
+            cloudY,
+            8,
+            0,
+            Math.PI *
+              2
+          );
+
+          ctx.arc(
+            screenX + 10,
+            cloudY + 4,
+            9,
+            0,
+            Math.PI *
+              2
+          );
+
+          ctx.fill();
+        }
+
+        // -------------------------------------------------
+        // Vzdálené mrtvé křoví (parallax 0.5)
+        // -------------------------------------------------
+        ctx.fillStyle =
+          "#160a12";
+
+        for (
+          let x = 0;
+          x < this.worldWidth;
+          x += 80
+        ) {
+
+          const screenX =
+            x -
+            this.cameraX *
+            0.5;
+
+          if (
+            screenX <
+              -60 ||
+            screenX >
+              300
+          ) {
+            continue;
+          }
+
+          ctx.beginPath();
+
+          ctx.arc(
+            screenX + 12,
+            195,
+            16,
+            Math.PI,
+            0
+          );
+
+          ctx.fill();
+
+          ctx.fillRect(
+            screenX - 4,
+            188,
+            32,
+            22
+          );
+
+          // trnité výhonky
+          for (
+            let t = 0;
+            t < 3;
+            t++
+          ) {
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+              screenX +
+                4 +
+                t * 8,
+              189
+            );
+
+            ctx.lineTo(
+              screenX +
+                6 +
+                t * 8,
+              178
+            );
+
+            ctx.lineTo(
+              screenX +
+                8 +
+                t * 8,
+              189
+            );
+
+            ctx.closePath();
+
+            ctx.fill();
+          }
+        }
+
+        // -------------------------------------------------
+        // Bližší mrtvé stromy a trnové keře (parallax 0.5)
+        // -------------------------------------------------
+        for (
+          let x = 20;
+          x < this.worldWidth;
+          x += 80
+        ) {
+
+          const screenX =
+            x -
+            this.cameraX *
+            0.5;
+
+          if (
+            screenX <
+              -60 ||
+            screenX >
+              300
+          ) {
+            continue;
+          }
+
+          const isTree =
+            pseudoNoise(
+              x * 0.7
+            ) >
+            0.72;
+
+          if (
+            isTree
+          ) {
+
+            ctx.strokeStyle =
+              "#0d0508";
+
+            ctx.lineWidth =
+              2;
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+              screenX + 10,
+              201
+            );
+
+            ctx.lineTo(
+              screenX + 9,
+              178
+            );
+
+            ctx.lineTo(
+              screenX + 2,
+              166
+            );
+
+            ctx.moveTo(
+              screenX + 9,
+              183
+            );
+
+            ctx.lineTo(
+              screenX + 17,
+              170
+            );
+
+            ctx.moveTo(
+              screenX + 9,
+              178
+            );
+
+            ctx.lineTo(
+              screenX + 5,
+              160
+            );
+
+            ctx.stroke();
+
+            ctx.lineWidth =
+              1;
+
+          } else {
+
+            ctx.fillStyle =
+              "#1f0e18";
+
+            ctx.beginPath();
+
+            ctx.arc(
+              screenX + 15,
+              190,
+              14,
+              Math.PI,
+              0
+            );
+
+            ctx.fill();
+
+            ctx.fillRect(
+              screenX,
+              183,
+              30,
+              18
+            );
+
+            for (
+              let t = 0;
+              t < 3;
+              t++
+            ) {
+
+              ctx.beginPath();
+
+              ctx.moveTo(
+                screenX +
+                  5 +
+                  t * 9,
+                184
+              );
+
+              ctx.lineTo(
+                screenX +
+                  7 +
+                  t * 9,
+                172
+              );
+
+              ctx.lineTo(
+                screenX +
+                  9 +
+                  t * 9,
+                184
+              );
+
+              ctx.closePath();
+
+              ctx.fill();
+            }
+
+            // řeřavá jiskra v popelu
+            const emberSeed =
+              pseudoNoise(
+                x * 3.1
+              );
+
+            if (
+              emberSeed >
+              0.6
+            ) {
+
+              ctx.save();
+
+              ctx.shadowBlur =
+                4;
+
+              ctx.shadowColor =
+                "rgba(255,80,50,0.9)";
+
+              ctx.fillStyle =
+                "#ff4d33";
+
+              ctx.fillRect(
+                screenX + 6,
+                186,
+                2,
+                2
+              );
+
+              ctx.fillRect(
+                screenX + 20,
+                189,
+                2,
+                2
+              );
+
+              ctx.restore();
+            }
+          }
+        }
+
+        // -------------------------------------------------
+        // Sjednocené noční ztmavení krajiny (hory/kopce/keře)
+        // -------------------------------------------------
+        if (
+          nightFactor >
+          0.02
+        ) {
+
+          ctx.fillStyle =
+            "rgba(4,6,20," +
+            (
+              nightFactor *
+              0.5
+            ) +
+            ")";
+
+          ctx.fillRect(
+            0,
+            80,
+            256,
+            160
+          );
+        }
+
+        if (
+          nightFactor >
+          0.4
+        ) {
+
+          this.drawFireflies(
+            nightFactor
+          );
+        }
+
+        // -------------------------------------------------
+        // Přebarvení podle mapového tématu levelu (hue tint)
+        // -------------------------------------------------
+        const bgTheme =
+          themeForLevel(this.levelTheme || 0);
+
+        if (bgTheme.tint) {
+
+          ctx.save();
+
+          ctx.globalCompositeOperation =
+            "hue";
+
+          ctx.fillStyle =
+            bgTheme.tint;
+
+          ctx.fillRect(
+            0,
+            0,
+            256,
+            240
+          );
+
+          ctx.restore();
+        }
+      },
+
+      drawStars(
+        nightFactor
+      ) {
+
+        if (
+          nightFactor <=
+          0.02
+        ) {
+          return;
+        }
+
+        const time =
+          performance.now() /
+          1000;
+
+        ctx.fillStyle =
+          "#ffffff";
+
+        for (
+          const star of
+          this.stars
+        ) {
+
+          const twinkle =
+            0.5 +
+            0.5 *
+            Math.sin(
+              time * 2 +
+              star.phase
+            );
+
+          ctx.globalAlpha =
+            nightFactor *
+            twinkle;
+
+          ctx.fillRect(
+            star.x,
+            star.y,
+            star.size,
+            star.size
+          );
+        }
+
+        ctx.globalAlpha =
+          1;
+      },
+
+      drawCelestialBodies(
+        phase,
+        altitude,
+        horizonGlow
+      ) {
+
+        const sunX =
+          20 +
+          phase *
+          216;
+
+        const sunY =
+          178 -
+          altitude *
+          140;
+
+        const sunAlpha =
+          Math.max(
+            0,
+            Math.min(
+              1,
+              altitude *
+              4 +
+              0.2
+            )
+          );
+
+        if (
+          sunAlpha >
+          0.02
+        ) {
+
+          const sunGlow =
+            ctx.createRadialGradient(
+              sunX,
+              sunY,
+              2,
+              sunX,
+              sunY,
+              28
+            );
+
+          sunGlow.addColorStop(
+            0,
+            "rgba(255,224,150," +
+              (
+                sunAlpha *
+                0.9
+              ) +
+              ")"
+          );
+
+          sunGlow.addColorStop(
+            1,
+            "rgba(255,224,150,0)"
+          );
+
+          ctx.fillStyle =
+            sunGlow;
+
+          ctx.fillRect(
+            sunX - 28,
+            sunY - 28,
+            56,
+            56
+          );
+
+          ctx.globalAlpha =
+            sunAlpha;
+
+          ctx.fillStyle =
+            "#f2e0b8";
+
+          ctx.beginPath();
+
+          ctx.arc(
+            sunX,
+            sunY,
+            14,
+            0,
+            Math.PI *
+              2
+          );
+
+          ctx.fill();
+
+          ctx.fillStyle =
+            "rgba(190,150,120,0.35)";
+
+          ctx.beginPath();
+
+          ctx.arc(
+            sunX - 4,
+            sunY + 3,
+            3.5,
+            0,
+            Math.PI *
+              2
+          );
+
+          ctx.fill();
+
+          ctx.beginPath();
+
+          ctx.arc(
+            sunX + 5,
+            sunY - 2,
+            2.5,
+            0,
+            Math.PI *
+              2
+          );
+
+          ctx.fill();
+
+          ctx.globalAlpha =
+            1;
+
+          if (
+            horizonGlow >
+            0.35
+          ) {
+
+            this.drawLightRays(
+              sunX,
+              sunY,
+              horizonGlow *
+                sunAlpha *
+                0.3
+            );
+          }
+        }
+
+        const moonPhase =
+          (
+            phase +
+            0.5
+          ) %
+          1;
+
+        const moonAltitude =
+          -altitude;
+
+        const moonX =
+          20 +
+          moonPhase *
+          216;
+
+        const moonY =
+          178 -
+          moonAltitude *
+          140;
+
+        const moonAlpha =
+          Math.max(
+            0,
+            Math.min(
+              1,
+              moonAltitude *
+              4 +
+              0.15
+            )
+          );
+
+        if (
+          moonAlpha >
+          0.02
+        ) {
+
+          const moonGlow =
+            ctx.createRadialGradient(
+              moonX,
+              moonY,
+              1,
+              moonX,
+              moonY,
+              20
+            );
+
+          moonGlow.addColorStop(
+            0,
+            "rgba(230,210,170," +
+              (
+                moonAlpha *
+                0.55
+              ) +
+              ")"
+          );
+
+          moonGlow.addColorStop(
+            1,
+            "rgba(230,210,170,0)"
+          );
+
+          ctx.fillStyle =
+            moonGlow;
+
+          ctx.fillRect(
+            moonX - 20,
+            moonY - 20,
+            40,
+            40
+          );
+
+          ctx.globalAlpha =
+            moonAlpha;
+
+          ctx.fillStyle =
+            "#e6d3a3";
+
+          ctx.beginPath();
+
+          ctx.arc(
+            moonX,
+            moonY,
+            9,
+            0,
+            Math.PI *
+              2
+          );
+
+          ctx.fill();
+
+          ctx.fillStyle =
+            "rgba(150,110,90,0.4)";
+
+          ctx.beginPath();
+
+          ctx.arc(
+            moonX - 2,
+            moonY - 1,
+            1.4,
+            0,
+            Math.PI *
+              2
+          );
+
+          ctx.fill();
+
+          ctx.beginPath();
+
+          ctx.arc(
+            moonX + 2,
+            moonY + 2,
+            1,
+            0,
+            Math.PI *
+              2
+          );
+
+          ctx.fill();
+
+          ctx.globalAlpha =
+            1;
+        }
+      },
+
+      drawLightRays(
+        x,
+        y,
+        alpha
+      ) {
+
+        if (
+          alpha <=
+          0.01
+        ) {
+          return;
+        }
+
+        const time =
+          performance.now() /
+          1000;
+
+        ctx.save();
+
+        ctx.globalCompositeOperation =
+          "lighter";
+
+        ctx.translate(
+          x,
+          y
+        );
+
+        ctx.rotate(
+          time *
+          0.06
+        );
+
+        const rayCount = 6;
+
+        for (
+          let i = 0;
+          i < rayCount;
+          i++
+        ) {
+
+          const angle =
+            (
+              Math.PI *
+              2 *
+              i
+            ) /
+            rayCount;
+
+          ctx.save();
+
+          ctx.rotate(
+            angle
+          );
+
+          const rayGradient =
+            ctx.createLinearGradient(
+              0,
+              0,
+              0,
+              150
+            );
+
+          rayGradient.addColorStop(
+            0,
+            "rgba(255,220,160," +
+              alpha +
+              ")"
+          );
+
+          rayGradient.addColorStop(
+            1,
+            "rgba(255,220,160,0)"
+          );
+
+          ctx.fillStyle =
+            rayGradient;
+
+          ctx.beginPath();
+
+          ctx.moveTo(
+            -6,
+            0
+          );
+
+          ctx.lineTo(
+            6,
+            0
+          );
+
+          ctx.lineTo(
+            2,
+            150
+          );
+
+          ctx.lineTo(
+            -2,
+            150
+          );
+
+          ctx.closePath();
+
+          ctx.fill();
+
+          ctx.restore();
+        }
+
+        ctx.restore();
+      },
+
+      drawFireflies(
+        nightFactor
+      ) {
+
+        const time =
+          performance.now() /
+          1000;
+
+        ctx.save();
+
+        ctx.globalCompositeOperation =
+          "lighter";
+
+        for (
+          const fly of
+          this.fireflies
+        ) {
+
+          const worldX =
+            fly.baseX +
+            Math.sin(
+              time *
+              fly.speed +
+              fly.phase
+            ) *
+            22;
+
+          const worldY =
+            fly.baseY +
+            Math.cos(
+              time *
+              fly.speed *
+              0.8 +
+              fly.phase
+            ) *
+            14;
+
+          const screenX =
+            worldX -
+            this.cameraX;
+
+          if (
+            screenX <
+              -10 ||
+            screenX >
+              266
+          ) {
+            continue;
+          }
+
+          const glowAlpha =
+            nightFactor *
+            (
+              0.4 +
+              0.6 *
+              Math.max(
+                0,
+                Math.sin(
+                  time * 4 +
+                  fly.phase
+                )
+              )
+            );
+
+          const glow =
+            ctx.createRadialGradient(
+              screenX,
+              worldY,
+              0,
+              screenX,
+              worldY,
+              5
+            );
+
+          glow.addColorStop(
+            0,
+            "rgba(255,90,50," +
+              glowAlpha +
+              ")"
+          );
+
+          glow.addColorStop(
+            1,
+            "rgba(255,90,50,0)"
+          );
+
+          ctx.fillStyle =
+            glow;
+
+          ctx.fillRect(
+            screenX - 5,
+            worldY - 5,
+            10,
+            10
+          );
+        }
+
+        ctx.restore();
+      },
+
+      drawPlatforms() {
+
+        for (
+          const platform of
+          this.platforms
+        ) {
+
+          const dirtGradient =
+            ctx.createLinearGradient(
+              0,
+              platform.y,
+              0,
+              platform.y +
+                platform.height
+            );
+
+          dirtGradient.addColorStop(
+            0,
+            "#4a3244"
+          );
+
+          dirtGradient.addColorStop(
+            1,
+            "#170d18"
+          );
+
+          ctx.fillStyle =
+            dirtGradient;
+
+          ctx.fillRect(
+            platform.x,
+            platform.y,
+            platform.width,
+            platform.height
+          );
+
+          // texturové tečky v kameni
+          ctx.fillStyle =
+            "rgba(0,0,0,0.25)";
+
+          for (
+            let dotX =
+              platform.x + 4;
+            dotX <
+              platform.x +
+              platform.width;
+            dotX += 9
+          ) {
+
+            const dotSeed =
+              pseudoNoise(
+                dotX
+              );
+
+            ctx.fillRect(
+              dotX,
+              platform.y +
+                6 +
+                dotSeed *
+                (
+                  platform.height -
+                  10
+                ),
+              2,
+              2
+            );
+          }
+
+          // spečená krusta navrchu
+          ctx.fillStyle =
+            "#2a1622";
+
+          ctx.fillRect(
+            platform.x,
+            platform.y,
+            platform.width,
+            4
+          );
+
+          ctx.fillStyle =
+            "#5c3a52";
+
+          ctx.fillRect(
+            platform.x,
+            platform.y,
+            platform.width,
+            2
+          );
+
+          // trnité výhonky
+          ctx.fillStyle =
+            "#1a0e16";
+
+          for (
+            let tuftX =
+              platform.x + 3;
+            tuftX <
+              platform.x +
+              platform.width -
+              3;
+            tuftX += 11
+          ) {
+
+            const tuftSeed =
+              pseudoNoise(
+                tuftX * 1.7
+              );
+
+            const tuftHeight =
+              2 +
+              tuftSeed *
+              3;
+
+            ctx.fillRect(
+              tuftX,
+              platform.y -
+                tuftHeight +
+                1,
+              1,
+              tuftHeight
+            );
+
+            ctx.fillRect(
+              tuftX + 2,
+              platform.y -
+                tuftHeight * 0.7 +
+                1,
+              1,
+              tuftHeight *
+                0.7
+            );
+          }
+        }
+
+        // -------------------------------------------------
+        // Přebarvení terénu podle mapového tématu (hue tint)
+        // -------------------------------------------------
+        const groundTheme =
+          themeForLevel(this.levelTheme || 0);
+
+        if (groundTheme.tint && this.platforms.length > 0) {
+
+          ctx.save();
+
+          ctx.globalCompositeOperation =
+            "hue";
+
+          ctx.fillStyle =
+            groundTheme.tint;
+
+          ctx.fillRect(
+            this.cameraX,
+            0,
+            256,
+            240
+          );
+
+          ctx.restore();
+        }
+      },
+
+      drawCoins() {
+
+        for (
+          const coin of
+          this.coins
+        ) {
+
+          if (
+            coin.collected
+          ) {
+            continue;
+          }
+
+          const time =
+            performance.now();
+
+          const pulse =
+            Math.sin(
+              time /
+              150
+            ) *
+            2;
+
+          const spin =
+            Math.abs(
+              Math.sin(
+                time /
+                220
+              )
+            );
+
+          const radiusX =
+            Math.max(
+              1.5,
+              5 *
+              spin
+            );
+
+          const coinGradient =
+            ctx.createRadialGradient(
+              coin.x - 1,
+              coin.y +
+                pulse -
+                1,
+              0.5,
+              coin.x,
+              coin.y +
+                pulse,
+              5
+            );
+
+          coinGradient.addColorStop(
+            0,
+            "#ffd9e0"
+          );
+
+          coinGradient.addColorStop(
+            0.6,
+            "#ff3d5f"
+          );
+
+          coinGradient.addColorStop(
+            1,
+            "#5c0f2a"
+          );
+
+          ctx.fillStyle =
+            coinGradient;
+
+          ctx.shadowBlur =
+            9;
+
+          ctx.shadowColor =
+            "rgba(255,61,95,0.85)";
+
+          ctx.beginPath();
+
+          ctx.ellipse(
+            coin.x,
+            coin.y +
+              pulse,
+            radiusX,
+            5,
+            0,
+            0,
+            Math.PI *
+              2
+          );
+
+          ctx.fill();
+
+          ctx.shadowBlur =
+            0;
+
+          ctx.strokeStyle =
+            "#8a1030";
+
+          ctx.lineWidth =
+            0.6;
+
+          ctx.stroke();
+
+          ctx.fillStyle =
+            "rgba(255,255,255,0.85)";
+
+          ctx.fillRect(
+            coin.x -
+              radiusX * 0.3,
+            coin.y -
+              3 +
+              pulse,
+            Math.max(
+              0.6,
+              radiusX *
+              0.3
+            ),
+            6
+          );
+        }
+      },
+
+      drawPowerUps() {
+
+        for (
+          const powerUp of
+          this.powerUps
+        ) {
+
+          if (
+            powerUp.collected
+          ) {
+            continue;
+          }
+
+          const time =
+            performance.now();
+
+          const bob =
+            Math.sin(
+              time / 260
+            ) *
+            2;
+
+          const glow =
+            0.6 +
+            Math.sin(
+              time / 180
+            ) *
+            0.3;
+
+          ctx.save();
+
+          ctx.shadowBlur = 10;
+
+          ctx.shadowColor =
+            "rgba(79,214,255," + glow + ")";
+
+          const gradient =
+            ctx.createRadialGradient(
+              powerUp.x,
+              powerUp.y + bob,
+              0.5,
+              powerUp.x,
+              powerUp.y + bob,
+              6
+            );
+
+          gradient.addColorStop(0, "#e3fbff");
+          gradient.addColorStop(0.55, "#4fd6ff");
+          gradient.addColorStop(1, "#0f4a6a");
+
+          ctx.fillStyle = gradient;
+
+          ctx.beginPath();
+
+          ctx.moveTo(powerUp.x, powerUp.y + bob - 6);
+          ctx.lineTo(powerUp.x + 5, powerUp.y + bob);
+          ctx.lineTo(powerUp.x, powerUp.y + bob + 6);
+          ctx.lineTo(powerUp.x - 5, powerUp.y + bob);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.restore();
+
+          ctx.strokeStyle = "rgba(255,255,255,0.6)";
+          ctx.lineWidth = 0.6;
+          ctx.stroke();
+        }
+      },
+
+      drawEnemies() {
+
+        for (
+          const enemy of
+          this.enemies
+        ) {
+
+          if (
+            !enemy.alive
+          ) {
+            continue;
+          }
+
+          if (enemy.type === "bat") {
+            this.drawBatEnemy(enemy);
+            continue;
+          }
+
+          if (enemy.type === "brute") {
+            this.drawBruteEnemy(enemy);
+            continue;
+          }
+
+          if (enemy.type === "specter") {
+            this.drawSpecterEnemy(enemy);
+            continue;
+          }
+
+          // stín
+          ctx.fillStyle =
+            "rgba(0,0,0,0.2)";
+
+          ctx.beginPath();
+
+          ctx.ellipse(
+            enemy.x +
+              enemy.width /
+              2,
+            enemy.y +
+              enemy.height +
+              1,
+            8,
+            2,
+            0,
+            0,
+            Math.PI *
+              2
+          );
+
+          ctx.fill();
+
+          // tělo - gradient
+          const bodyGradient =
+            ctx.createLinearGradient(
+              enemy.x,
+              enemy.y,
+              enemy.x,
+              enemy.y +
+                enemy.height
+            );
+
+          bodyGradient.addColorStop(
+            0,
+            "#3a1f38"
+          );
+
+          bodyGradient.addColorStop(
+            1,
+            "#12081a"
+          );
+
+          ctx.fillStyle =
+            bodyGradient;
+
+          ctx.fillRect(
+            enemy.x,
+            enemy.y + 5,
+            enemy.width,
+            15
+          );
+
+          // hlava
+          ctx.fillStyle =
+            "#4a2a48";
+
+          ctx.fillRect(
+            enemy.x + 2,
+            enemy.y,
+            14,
+            10
+          );
+
+          // bříško
+          ctx.fillStyle =
+            "#241428";
+
+          ctx.fillRect(
+            enemy.x + 4,
+            enemy.y + 9,
+            10,
+            9
+          );
+
+          // obočí (naštvaný výraz)
+          ctx.fillStyle =
+            "#0c0510";
+
+          ctx.fillRect(
+            enemy.x + 3,
+            enemy.y + 3,
+            4,
+            1
+          );
+
+          ctx.fillRect(
+            enemy.x + 11,
+            enemy.y + 3,
+            4,
+            1
+          );
+
+          // žhnoucí oči
+          ctx.save();
+
+          ctx.shadowBlur =
+            5;
+
+          ctx.shadowColor =
+            "rgba(255,40,60,0.9)";
+
+          ctx.fillStyle =
+            "#ff2838";
+
+          ctx.fillRect(
+            enemy.x + 4,
+            enemy.y + 5,
+            2,
+            2
+          );
+
+          ctx.fillRect(
+            enemy.x + 12,
+            enemy.y + 5,
+            2,
+            2
+          );
+
+          ctx.restore();
+
+          ctx.fillStyle =
+            "#ffb3bd";
+
+          ctx.fillRect(
+            enemy.x + 4,
+            enemy.y + 5,
+            1,
+            1
+          );
+
+          ctx.fillRect(
+            enemy.x + 12,
+            enemy.y + 5,
+            1,
+            1
+          );
+
+          // nohy
+          ctx.fillStyle =
+            "#100816";
+
+          ctx.fillRect(
+            enemy.x + 1,
+            enemy.y + 18,
+            5,
+            2
+          );
+
+          ctx.fillRect(
+            enemy.x + 12,
+            enemy.y + 18,
+            5,
+            2
+          );
+        }
+      },
+
+      drawBatEnemy(enemy) {
+
+        const time =
+          performance.now() / 1000;
+
+        const flap =
+          Math.sin(time * 14 + enemy.x) > 0 ? 0 : 3;
+
+        const cx = enemy.x + enemy.width / 2;
+        const cy = enemy.y + enemy.height / 2;
+
+        // stín na zemi (netopýr létá výš, stín slabší)
+        ctx.fillStyle = "rgba(0,0,0,0.15)";
+        ctx.beginPath();
+        ctx.ellipse(cx, 208, 7, 2, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // křídla
+        ctx.fillStyle = "#2a1030";
+        ctx.beginPath();
+        ctx.moveTo(cx - 2, cy);
+        ctx.lineTo(cx - 9, cy - 5 + flap);
+        ctx.lineTo(cx - 3, cy + 2);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(cx + 2, cy);
+        ctx.lineTo(cx + 9, cy - 5 + flap);
+        ctx.lineTo(cx + 3, cy + 2);
+        ctx.closePath();
+        ctx.fill();
+
+        // tělo
+        ctx.fillStyle = "#3a1840";
+        ctx.fillRect(enemy.x + 5, enemy.y + 3, 6, 7);
+
+        // uši
+        ctx.fillStyle = "#3a1840";
+        ctx.fillRect(enemy.x + 5, enemy.y, 2, 3);
+        ctx.fillRect(enemy.x + 9, enemy.y, 2, 3);
+
+        // žhnoucí oči
+        ctx.save();
+        ctx.shadowBlur = 4;
+        ctx.shadowColor = "rgba(190,80,255,0.9)";
+        ctx.fillStyle = "#c060ff";
+        ctx.fillRect(enemy.x + 6, enemy.y + 5, 1, 1);
+        ctx.fillRect(enemy.x + 9, enemy.y + 5, 1, 1);
+        ctx.restore();
+      },
+
+      drawBruteEnemy(enemy) {
+
+        // stín
+        ctx.fillStyle = "rgba(0,0,0,0.25)";
+        ctx.beginPath();
+        ctx.ellipse(
+          enemy.x + enemy.width / 2,
+          enemy.y + enemy.height + 1,
+          10, 2, 0, 0, Math.PI * 2
+        );
+        ctx.fill();
+
+        const flashMix = enemy.hitFlash || 0;
+
+        // tělo - masivní, tmavě olivová/kostěná barva
+        const bodyGradient = ctx.createLinearGradient(
+          enemy.x, enemy.y, enemy.x, enemy.y + enemy.height
+        );
+
+        bodyGradient.addColorStop(0, flashMix > 0 ? "#ffffff" : "#3a3222");
+        bodyGradient.addColorStop(1, flashMix > 0 ? "#ffdede" : "#14100a");
+
+        ctx.fillStyle = bodyGradient;
+        ctx.fillRect(enemy.x, enemy.y + 6, enemy.width, enemy.height - 6);
+
+        // hlava
+        ctx.fillStyle = flashMix > 0 ? "#ffffff" : "#4a4030";
+        ctx.fillRect(enemy.x + 4, enemy.y, 16, 11);
+
+        // rohy
+        ctx.fillStyle = "#c9c0a0";
+        ctx.fillRect(enemy.x + 2, enemy.y - 2, 3, 5);
+        ctx.fillRect(enemy.x + 19, enemy.y - 2, 3, 5);
+
+        // žhnoucí oči
+        ctx.save();
+        ctx.shadowBlur = 5;
+        ctx.shadowColor = "rgba(255,150,20,0.9)";
+        ctx.fillStyle = "#ff9614";
+        ctx.fillRect(enemy.x + 7, enemy.y + 5, 2, 2);
+        ctx.fillRect(enemy.x + 15, enemy.y + 5, 2, 2);
+        ctx.restore();
+
+        // nohy
+        ctx.fillStyle = "#100c08";
+        ctx.fillRect(enemy.x + 2, enemy.y + enemy.height - 3, 7, 3);
+        ctx.fillRect(enemy.x + enemy.width - 9, enemy.y + enemy.height - 3, 7, 3);
+
+        // HP indikátor (jen pokud ještě potřebuje 2. dupnutí)
+        if (enemy.hp > 1) {
+          ctx.fillStyle = "#ff9614";
+          ctx.fillRect(enemy.x + 4, enemy.y - 6, enemy.width - 8, 2);
+        }
+      },
+
+      drawSpecterEnemy(enemy) {
+
+        ctx.save();
+
+        ctx.globalAlpha = 0.6;
+
+        // stín
+        ctx.fillStyle = "rgba(0,0,0,0.15)";
+        ctx.beginPath();
+        ctx.ellipse(
+          enemy.x + enemy.width / 2,
+          enemy.y + enemy.height + 1,
+          7, 2, 0, 0, Math.PI * 2
+        );
+        ctx.fill();
+
+        // tělo - přízračně modrošedé, rozplývající se dole
+        const bodyGradient = ctx.createLinearGradient(
+          enemy.x, enemy.y, enemy.x, enemy.y + enemy.height
+        );
+
+        bodyGradient.addColorStop(0, "#5a6a8a");
+        bodyGradient.addColorStop(1, "rgba(40,50,70,0)");
+
+        ctx.fillStyle = bodyGradient;
+        ctx.fillRect(enemy.x + 1, enemy.y + 4, enemy.width - 2, enemy.height - 2);
+
+        // hlava
+        ctx.globalAlpha = 0.8;
+        ctx.fillStyle = "#7080a8";
+        ctx.fillRect(enemy.x + 3, enemy.y, 10, 9);
+
+        // žhnoucí oči
+        ctx.shadowBlur = 6;
+        ctx.shadowColor = "rgba(120,200,255,0.9)";
+        ctx.fillStyle = "#a0e8ff";
+        ctx.fillRect(enemy.x + 4, enemy.y + 4, 2, 2);
+        ctx.fillRect(enemy.x + 10, enemy.y + 4, 2, 2);
+
+        ctx.restore();
+      },
+
+      drawBirds() {
+
+        const time =
+          performance.now() /
+          1000;
+
+        ctx.strokeStyle =
+          "rgba(10,4,10,0.75)";
+
+        ctx.lineWidth =
+          1.2;
+
+        for (
+          const bird of
+          this.birds
+        ) {
+
+          const cycle =
+            296;
+
+          const x =
+            (
+              (
+                time *
+                bird.speed +
+                bird.offset
+              ) %
+              cycle
+            ) -
+            20;
+
+          const y =
+            bird.y +
+            Math.sin(
+              time * 1.5 +
+              bird.offset
+            ) *
+            3;
+
+          const flap =
+            Math.sin(
+              time * 9 +
+              bird.offset
+            ) *
+            3;
+
+          ctx.beginPath();
+
+          ctx.moveTo(
+            x - 4,
+            y +
+              flap
+          );
+
+          ctx.lineTo(
+            x,
+            y
+          );
+
+          ctx.lineTo(
+            x + 4,
+            y +
+              flap
+          );
+
+          ctx.stroke();
+        }
+      },
+
+      drawGoalFlag() {
+
+        const poleX =
+          this.worldWidth -
+          40;
+
+        const poleTop =
+          160;
+
+        const poleBottom =
+          210;
+
+        ctx.fillStyle =
+          "#2a2028";
+
+        ctx.fillRect(
+          poleX,
+          poleTop,
+          2,
+          poleBottom -
+            poleTop
+        );
+
+        ctx.fillStyle =
+          "#4a3a48";
+
+        ctx.beginPath();
+
+        ctx.arc(
+          poleX + 1,
+          poleTop,
+          2.5,
+          0,
+          Math.PI *
+            2
+        );
+
+        ctx.fill();
+
+        const wave =
+          Math.sin(
+            performance.now() /
+            180
+          ) *
+          3;
+
+        ctx.fillStyle =
+          this.won
+            ? "#e8c468"
+            : "#8a1226";
+
+        ctx.shadowBlur =
+          6;
+
+        ctx.shadowColor =
+          this.won
+            ? "rgba(232,196,104,0.8)"
+            : "rgba(138,18,38,0.8)";
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+          poleX + 2,
+          poleTop + 3
+        );
+
+        ctx.lineTo(
+          poleX + 18 +
+            wave,
+          poleTop + 8
+        );
+
+        ctx.lineTo(
+          poleX + 2,
+          poleTop + 13
+        );
+
+        ctx.closePath();
+
+        ctx.fill();
+
+        ctx.shadowBlur =
+          0;
+      },
+
+      drawCheckpointFlag() {
+
+        if (!this.levelCheckpointX) {
+          return;
+        }
+
+        const poleX = this.levelCheckpointX;
+        const poleTop = 165;
+        const poleBottom = 210;
+        const active = this.checkpointX !== null;
+
+        ctx.fillStyle = "#2a2028";
+
+        ctx.fillRect(poleX, poleTop, 2, poleBottom - poleTop);
+
+        const wave =
+          active
+            ? Math.sin(performance.now() / 160) * 3
+            : 0;
+
+        ctx.fillStyle = active ? "#4fd6ff" : "#3a4a52";
+        ctx.shadowBlur = active ? 6 : 0;
+        ctx.shadowColor = "rgba(79,214,255,0.8)";
+
+        ctx.beginPath();
+        ctx.moveTo(poleX + 2, poleTop + 2);
+        ctx.lineTo(poleX + 14 + wave, poleTop + 6);
+        ctx.lineTo(poleX + 2, poleTop + 10);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+      },
+
+      drawBoss() {
+
+        if (!this.boss || !this.boss.alive) {
+          return;
+        }
+
+        const boss = this.boss;
+
+        ctx.save();
+
+        if (boss.hitFlash > 0) {
+          ctx.fillStyle = "#ffffff";
+        } else {
+          ctx.fillStyle = "#3a1420";
+        }
+
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = "rgba(200,32,63,0.8)";
+
+        ctx.fillRect(boss.x, boss.y, boss.width, boss.height);
+
+        ctx.shadowBlur = 0;
+
+        ctx.fillStyle = "#c8203f";
+        ctx.fillRect(boss.x + 4, boss.y + 6, 6, 6);
+        ctx.fillRect(boss.x + boss.width - 10, boss.y + 6, 6, 6);
+
+        const barWidth = boss.width;
+        const hpRatio = Math.max(0, boss.hp / boss.maxHp);
+
+        ctx.fillStyle = "rgba(10,10,10,0.6)";
+        ctx.fillRect(boss.x, boss.y - 10, barWidth, 5);
+
+        ctx.fillStyle = "#c8203f";
+        ctx.fillRect(boss.x, boss.y - 10, barWidth * hpRatio, 5);
+
+        ctx.strokeStyle = "rgba(255,255,255,0.5)";
+        ctx.lineWidth = 0.6;
+        ctx.strokeRect(boss.x, boss.y - 10, barWidth, 5);
+
+        ctx.restore();
+      },
+
+      drawHitFlash() {
+
+        if (
+          this.hitFlash <=
+          0
+        ) {
+          return;
+        }
+
+        ctx.fillStyle =
+          "rgba(220,30,30," +
+          (
+            this.hitFlash *
+            0.45
+          ) +
+          ")";
+
+        ctx.fillRect(
+          0,
+          0,
+          256,
+          240
+        );
+      },
+
+      drawVignette() {
+
+        const vignette =
+          ctx.createRadialGradient(
+            128,
+            120,
+            70,
+            128,
+            120,
+            175
+          );
+
+        vignette.addColorStop(
+          0,
+          "rgba(0,0,0,0)"
+        );
+
+        vignette.addColorStop(
+          1,
+          "rgba(0,0,0,0.38)"
+        );
+
+        ctx.fillStyle =
+          vignette;
+
+        ctx.fillRect(
+          0,
+          0,
+          256,
+          240
+        );
+      },
+
+      drawHud() {
+
+        ctx.fillStyle =
+          "rgba(10,10,10,0.45)";
+
+        ctx.fillRect(
+          6,
+          6,
+          92,
+          16
+        );
+
+        const coinGradient =
+          ctx.createRadialGradient(
+            17,
+            14,
+            0.5,
+            17,
+            14,
+            5
+          );
+
+        coinGradient.addColorStop(
+          0,
+          "#ffd9e0"
+        );
+
+        coinGradient.addColorStop(
+          1,
+          "#8a1030"
+        );
+
+        ctx.fillStyle =
+          coinGradient;
+
+        ctx.beginPath();
+
+        ctx.arc(
+          17,
+          14,
+          5,
+          0,
+          Math.PI *
+            2
+        );
+
+        ctx.fill();
+
+        ctx.fillStyle =
+          "#ffffff";
+
+        ctx.font =
+          "10px monospace";
+
+        ctx.textAlign =
+          "left";
+
+        ctx.fillText(
+          "x " +
+            this.coinsCollected,
+          25,
+          17
+        );
+
+        ctx.fillText(
+          "SCORE " +
+            this.score,
+          55,
+          17
+        );
+
+        const barWidth = 92;
+
+        const progress =
+          Math.max(
+            0,
+            Math.min(
+              1,
+              this.player.x /
+              this.worldWidth
+            )
+          );
+
+        ctx.fillStyle =
+          "rgba(10,10,10,0.45)";
+
+        ctx.fillRect(
+          158,
+          6,
+          barWidth,
+          10
+        );
+
+        ctx.fillStyle =
+          "#c8203f";
+
+        ctx.fillRect(
+          159,
+          7,
+          Math.max(
+            0,
+            (
+              barWidth -
+              2
+            ) *
+            progress
+          ),
+          8
+        );
+
+        ctx.strokeStyle =
+          "rgba(255,255,255,0.4)";
+
+        ctx.lineWidth =
+          0.6;
+
+        ctx.strokeRect(
+          158,
+          6,
+          barWidth,
+          10
+        );
+
+        ctx.fillStyle =
+          "rgba(10,10,10,0.45)";
+
+        ctx.fillRect(
+          6,
+          24,
+          130,
+          14
+        );
+
+        ctx.fillStyle =
+          "#ff5f7a";
+
+        ctx.font =
+          "10px monospace";
+
+        ctx.textAlign =
+          "left";
+
+        const heartCount =
+          Math.max(0, this.lives);
+
+        let hearts = "";
+
+        for (let i = 0; i < heartCount; i++) {
+          hearts += "♥";
+        }
+
+        ctx.fillText(
+          hearts || "-",
+          10,
+          35
+        );
+
+        ctx.fillStyle =
+          "#ffffff";
+
+        const modeLabel =
+          this.mode === "endless"
+            ? "ENDLESS #" + (this.levelIndex + 1)
+            : "LVL " + (this.levelIndex + 1) + "/" + LEVEL_COUNT;
+
+        ctx.fillText(
+          modeLabel,
+          48,
+          35
+        );
+
+        ctx.fillStyle =
+          "rgba(10,10,10,0.45)";
+
+        ctx.fillRect(
+          158,
+          24,
+          92,
+          14
+        );
+
+        ctx.fillStyle =
+          "#4fd6ff";
+
+        ctx.fillText(
+          "BEST " + this.highScore,
+          162,
+          35
+        );
+      },
+
+      drawScanlines() {
+
+        ctx.save();
+
+        ctx.fillStyle =
+          getScanlinePattern();
+
+        ctx.fillRect(
+          0,
+          0,
+          256,
+          240
+        );
+
+        ctx.restore();
+      }
+    };
+
+    function drawOverlay(
+      title,
+      subtitle
+    ) {
+
+      ctx.fillStyle =
+        "rgba(0, 0, 0, 0.75)";
+
+      ctx.fillRect(
+        0,
+        0,
+        256,
+        240
+      );
+
+      ctx.fillStyle =
+        "#ffffff";
+
+      ctx.textAlign =
+        "center";
+
+      ctx.font =
+        "bold 18px monospace";
+
+      ctx.globalCompositeOperation =
+        "lighter";
+
+      ctx.fillStyle =
+        "rgba(255,60,60,0.65)";
+
+      ctx.fillText(
+        title,
+        126,
+        105
+      );
+
+      ctx.fillStyle =
+        "rgba(60,180,255,0.65)";
+
+      ctx.fillText(
+        title,
+        130,
+        105
+      );
+
+      ctx.globalCompositeOperation =
+        "source-over";
+
+      ctx.fillStyle =
+        "#ffffff";
+
+      ctx.fillText(
+        title,
+        128,
+        105
+      );
+
+      ctx.font =
+        "10px monospace";
+
+      ctx.fillText(
+        subtitle,
+        128,
+        125
+      );
+    }
+
+    function clearInput() {
+
+      Object.keys(
+        input
+      ).forEach(
+        key => {
+          input[key] =
+            false;
+        }
+      );
+
+      document
+        .querySelectorAll(
+          "[data-input]"
+        )
+        .forEach(
+          button => {
+            button.classList.remove(
+              "active"
+            );
+          }
+        );
+    }
+
+    function showMenu() {
+
+      Engine.stop();
+
+      showView(menuView);
+
+      const highScoreEl =
+        document.getElementById(
+          "menu-highscore"
+        );
+
+      if (
+        highScoreEl
+      ) {
+
+        highScoreEl.textContent =
+          "BEST SCORE: " +
+          Game.highScore;
+      }
+
+      clearInput();
+    }
+
+    function startGame(mode, levelIndex) {
+
+      showView(gameView);
+
+      clearInput();
+
+      runLoadingScreen(() => {
+
+        if (
+          mode === "endless"
+        ) {
+
+          Game.beginEndlessRun();
+
+        } else {
+
+          Game.beginNewRun(levelIndex || 0);
+        }
+
+        Engine.start();
+
+      }, 900);
+    }
+
+    function continueGame() {
+
+      if (
+        Game.won
+      ) {
+
+        if (
+          Game.gameComplete
+        ) {
+
+          Game.mode =
+            "endless";
+
+          Game.levelIndex =
+            0;
+
+          Game.gameComplete =
+            false;
+
+        } else {
+
+          Game.levelIndex++;
+        }
+
+        Game.checkpointX = null;
+        Game.hitThisLevel = false;
+      }
+
+      Engine.start();
+    }
+
+    // ---------------------------------------------------------------
+    // WORLD MAP / ACHIEVEMENTS / SETTINGS / UPDATES - panel rendery
+    // ---------------------------------------------------------------
+    function openWorldMap() {
+
+      Engine.stop();
+
+      renderWorldMap();
+
+      showView(worldmapView);
+    }
+
+    function renderWorldMap() {
+
+      const container =
+        document.getElementById("worldmap-list");
+
+      if (!container) {
+        return;
+      }
+
+      container.innerHTML = "";
+
+      for (let i = 0; i < LEVEL_COUNT; i++) {
+
+        const unlocked =
+          i <= SaveSystem.data.unlockedLevel;
+
+        const done =
+          i < SaveSystem.data.unlockedLevel ||
+          SaveSystem.data.allLevelsCleared;
+
+        const node = document.createElement("button");
+
+        node.type = "button";
+
+        node.className =
+          "list-node" +
+          (unlocked ? "" : " locked") +
+          (done ? " done" : "");
+
+        const nodeTheme = themeForLevel(i);
+
+        node.innerHTML =
+          '<div class="node-icon">' +
+          (i === LEVEL_COUNT - 1 ? "👑" : (done ? "✅" : nodeTheme.icon)) +
+          "</div>" +
+          '<div class="node-body">' +
+          '<div class="node-title">Level ' + (i + 1) + " / " + LEVEL_COUNT +
+          (i === LEVEL_COUNT - 1 ? " · BOSS" : "") +
+          "</div>" +
+          '<div class="node-sub">' +
+          nodeTheme.name + " — " +
+          (unlocked
+            ? "Klepni pro spuštění tohoto levelu."
+            : "Uzamčeno - dokonči předchozí level.") +
+          "</div>" +
+          "</div>" +
+          '<div class="node-badge">' +
+          (unlocked ? (done ? "CLEARED" : "READY") : "🔒") +
+          "</div>";
+
+        if (unlocked) {
+
+          node.addEventListener("click", () => {
+            startGame("levels", i);
+          });
+        }
+
+        container.appendChild(node);
+      }
+
+      const endlessNode = document.createElement("button");
+      endlessNode.type = "button";
+      endlessNode.className = "list-node done";
+
+      endlessNode.innerHTML =
+        '<div class="node-icon">♾️</div>' +
+        '<div class="node-body">' +
+        '<div class="node-title">Endless Mode</div>' +
+        '<div class="node-sub">Nejlepší dosažený úsek: ' +
+        SaveSystem.data.endlessBest + "</div>" +
+        "</div>" +
+        '<div class="node-badge">PLAY</div>';
+
+      endlessNode.addEventListener("click", () => {
+        startGame("endless");
+      });
+
+      container.appendChild(endlessNode);
+    }
+
+    function openAchievements() {
+
+      Engine.stop();
+
+      renderAchievements();
+
+      showView(achievementsView);
+    }
+
+    function renderAchievements() {
+
+      const container =
+        document.getElementById("achievements-list");
+
+      if (!container) {
+        return;
+      }
+
+      container.innerHTML = "";
+
+      ACHIEVEMENTS.forEach(def => {
+
+        const unlocked =
+          !!SaveSystem.data.achievements[def.id];
+
+        const node = document.createElement("div");
+
+        node.className =
+          "list-node" + (unlocked ? " done" : " locked");
+
+        node.innerHTML =
+          '<div class="node-icon">' + (unlocked ? def.icon : "🔒") + "</div>" +
+          '<div class="node-body">' +
+          '<div class="node-title">' + def.name + "</div>" +
+          '<div class="node-sub">' + def.desc + "</div>" +
+          "</div>" +
+          '<div class="node-badge">' + (unlocked ? "DONE" : "") + "</div>";
+
+        container.appendChild(node);
+      });
+    }
+
+    // ---------------------------------------------------------------
+    // VÝBĚR POSTAVY - výchozí Rytíř (vždy dostupný) a Padlý Rytíř
+    // (odemyká se dokončením celé kampaně, 8/8 levelů).
+    // ---------------------------------------------------------------
+    const CHARACTERS = [
+      {
+        id: "knight",
+        icon: "🐇",
+        name: "RabbitHollow Rytíř",
+        desc: "Výchozí bílo-stříbrný gotický rytíř s karmínovým pláštěm.",
+        alwaysUnlocked: true
+      },
+      {
+        id: "voidknight",
+        icon: "🐺",
+        name: "Padlý Rytíř",
+        desc: "Černo-zlatá zbroj se žhnoucí fialovou září. Odemkni dokončením kampaně (8/8 levelů).",
+        alwaysUnlocked: false
+      }
+    ];
+
+    function openCharacters() {
+
+      Engine.stop();
+
+      renderCharacterSelect();
+
+      showView(characterView);
+    }
+
+    function renderCharacterSelect() {
+
+      const container =
+        document.getElementById("character-list");
+
+      if (!container) {
+        return;
+      }
+
+      container.innerHTML = "";
+
+      CHARACTERS.forEach(def => {
+
+        const unlocked =
+          def.alwaysUnlocked || SaveSystem.data.unlockedCharacter;
+
+        const selected =
+          SaveSystem.data.selectedCharacter === def.id;
+
+        const node = document.createElement("button");
+
+        node.type = "button";
+
+        node.className =
+          "list-node" +
+          (unlocked ? "" : " locked") +
+          (selected ? " done" : "");
+
+        node.innerHTML =
+          '<div class="node-icon">' + (unlocked ? def.icon : "🔒") + "</div>" +
+          '<div class="node-body">' +
+          '<div class="node-title">' + def.name + "</div>" +
+          '<div class="node-sub">' + def.desc + "</div>" +
+          "</div>" +
+          '<div class="node-badge">' +
+          (selected ? "VYBRÁNO" : (unlocked ? "VYBRAT" : "🔒")) +
+          "</div>";
+
+        if (unlocked) {
+
+          node.addEventListener("click", () => {
+
+            SaveSystem.data.selectedCharacter = def.id;
+            SaveSystem.save();
+
+            AudioEngine.play("checkpoint");
+
+            renderCharacterSelect();
+
+            showToast(def.icon + " POSTAVA VYBRÁNA", def.name);
+          });
+        }
+
+        container.appendChild(node);
+      });
+    }
+
+    function openSettings() {
+
+      Engine.stop();
+
+      renderSettings();
+
+      showView(settingsView);
+    }
+
+    function renderSettings() {
+
+      const muteBtn =
+        document.getElementById("settings-mute-toggle");
+
+      const volumeInput =
+        document.getElementById("settings-volume");
+
+      const volumeValue =
+        document.getElementById("settings-volume-value");
+
+      if (muteBtn) {
+
+        const muted = SaveSystem.data.settings.muted;
+
+        muteBtn.textContent = muted ? "VYPNUTO" : "ZAPNUTO";
+        muteBtn.classList.toggle("on", !muted);
+      }
+
+      if (volumeInput) {
+
+        volumeInput.value = Math.round(
+          SaveSystem.data.settings.volume * 100
+        );
+      }
+
+      if (volumeValue) {
+
+        volumeValue.textContent =
+          Math.round(SaveSystem.data.settings.volume * 100) + "%";
+      }
+    }
+
+    function openUpdates() {
+
+      Engine.stop();
+
+      renderUpdates();
+
+      showView(updatesView);
+    }
+
+    function renderUpdates() {
+
+      const container =
+        document.getElementById("updates-list");
+
+      if (!container) {
+        return;
+      }
+
+      container.innerHTML = "";
+
+      UPDATE_LOG.forEach(entry => {
+
+        const node = document.createElement("div");
+        node.className = "list-node";
+        node.style.alignItems = "flex-start";
+
+        const notesHtml =
+          entry.notes.map(n => "&bull; " + n).join("<br>");
+
+        node.innerHTML =
+          '<div class="node-icon">📦</div>' +
+          '<div class="node-body">' +
+          '<div class="node-title">' + entry.version + " · " + entry.title + "</div>" +
+          '<div class="node-sub">' + notesHtml + "</div>" +
+          "</div>";
+
+        container.appendChild(node);
+      });
+    }
+
+    document
+      .getElementById(
+        "start-game"
+      )
+      .addEventListener(
+        "click",
+        () => startGame("levels")
+      );
+
+    document
+      .getElementById(
+        "start-endless"
+      )
+      .addEventListener(
+        "click",
+        () => startGame("endless")
+      );
+
+    document
+      .getElementById(
+        "back-button"
+      )
+      .addEventListener(
+        "click",
+        showMenu
+      );
+
+    document
+      .getElementById(
+        "home-button"
+      )
+      .addEventListener(
+        "click",
+        showMenu
+      );
+
+    document
+      .getElementById(
+        "restart-button"
+      )
+      .addEventListener(
+        "click",
+        () => {
+          Engine.start();
+        }
+      );
+
+    document
+      .getElementById("pause-button")
+      .addEventListener("click", () => {
+        Engine.togglePause();
+      });
+
+    document
+      .getElementById("resume-button")
+      .addEventListener("click", () => {
+        Engine.resume();
+      });
+
+    document
+      .getElementById("pause-restart-button")
+      .addEventListener("click", () => {
+        Engine.resume();
+        Engine.start();
+      });
+
+    document
+      .getElementById("pause-settings-button")
+      .addEventListener("click", () => {
+        openSettings();
+      });
+
+    document
+      .getElementById("pause-menu-button")
+      .addEventListener("click", () => {
+        showMenu();
+      });
+
+    document
+      .getElementById("open-worldmap")
+      .addEventListener("click", openWorldMap);
+
+    document
+      .getElementById("worldmap-back")
+      .addEventListener("click", showMenu);
+
+    document
+      .getElementById("open-achievements")
+      .addEventListener("click", openAchievements);
+
+    document
+      .getElementById("achievements-back")
+      .addEventListener("click", showMenu);
+
+    document
+      .getElementById("open-characters")
+      .addEventListener("click", openCharacters);
+
+    document
+      .getElementById("character-back")
+      .addEventListener("click", showMenu);
+
+    document
+      .getElementById("open-settings")
+      .addEventListener("click", () => openSettings());
+
+    document
+      .getElementById("settings-back")
+      .addEventListener("click", showMenu);
+
+    document
+      .getElementById("open-updates")
+      .addEventListener("click", openUpdates);
+
+    document
+      .getElementById("updates-back")
+      .addEventListener("click", showMenu);
+
+    document
+      .getElementById("settings-mute-toggle")
+      .addEventListener("click", () => {
+
+        SaveSystem.data.settings.muted =
+          !SaveSystem.data.settings.muted;
+
+        SaveSystem.save();
+
+        renderSettings();
+
+        AudioEngine.play("checkpoint");
+      });
+
+    document
+      .getElementById("settings-volume")
+      .addEventListener("input", event => {
+
+        SaveSystem.data.settings.volume =
+          Number(event.target.value) / 100;
+
+        SaveSystem.save();
+
+        document.getElementById("settings-volume-value").textContent =
+          event.target.value + "%";
+      });
+
+    document
+      .getElementById("settings-volume")
+      .addEventListener("change", () => {
+        AudioEngine.play("coin");
+      });
+
+    document
+      .getElementById("settings-reset")
+      .addEventListener("click", () => {
+
+        const confirmed =
+          window.confirm(
+            "Opravdu smazat veškerý uložený postup, odemčené levely a achievementy?"
+          );
+
+        if (!confirmed) {
+          return;
+        }
+
+        SaveSystem.reset();
+        Game.highScore = 0;
+        renderSettings();
+        showToast("🗑️ RESET", "Postup byl vymazán.");
+      });
+
+    document
+      .getElementById(
+        "fullscreen-button"
+      )
+      .addEventListener(
+        "click",
+        async () => {
+
+          try {
+
+            if (
+              document
+                .documentElement
+                .requestFullscreen
+            ) {
+
+              await document
+                .documentElement
+                .requestFullscreen();
+            }
+
+          } catch (
+            error
+          ) {
+
+            console.error(
+              error
+            );
+          }
+        }
+      );
+
+    document
+      .querySelectorAll(
+        "[data-input]"
+      )
+      .forEach(
+        button => {
+
+          const key =
+            button.dataset.input;
+
+          button.addEventListener(
+            "pointerdown",
+            event => {
+
+              event.preventDefault();
+
+              button.setPointerCapture(
+                event.pointerId
+              );
+
+              input[key] =
+                true;
+
+              button.classList.add(
+                "active"
+              );
+
+              if (
+                key === "b"
+              ) {
+
+                attackPressed =
+                  true;
+              }
+
+              if (
+                key === "a" &&
+                (
+                  Game.gameOver ||
+                  Game.won
+                )
+              ) {
+
+                continueGame();
+              }
+            }
+          );
+
+          button.addEventListener(
+            "pointerup",
+            event => {
+
+              event.preventDefault();
+
+              input[key] =
+                false;
+
+              button.classList.remove(
+                "active"
+              );
+            }
+          );
+
+          button.addEventListener(
+            "pointercancel",
+            () => {
+
+              input[key] =
+                false;
+
+              button.classList.remove(
+                "active"
+              );
+            }
+          );
+        }
+      );
+
+    document.addEventListener(
+      "keydown",
+      event => {
+
+        if (
+          (event.code === "Escape" || event.code === "KeyP") &&
+          gameView.classList.contains("active")
+        ) {
+
+          event.preventDefault();
+          Engine.togglePause();
+          return;
+        }
+
+        if (Engine.paused) {
+          return;
+        }
+
+        const key =
+          keyMap[
+            event.code
+          ];
+
+        if (
+          !key
+        ) {
+          return;
+        }
+
+        event.preventDefault();
+
+        if (
+          key === "b" &&
+          !event.repeat
+        ) {
+
+          attackPressed =
+            true;
+        }
+
+        input[key] =
+          true;
+
+        if (
+          (
+            Game.gameOver ||
+            Game.won
+          ) &&
+          key === "a"
+        ) {
+
+          continueGame();
+        }
+      }
+    );
+
+    document.addEventListener(
+      "keyup",
+      event => {
+
+        const key =
+          keyMap[
+            event.code
+          ];
+
+        if (
+          !key
+        ) {
+          return;
+        }
+
+        event.preventDefault();
+
+        input[key] =
+          false;
+      }
+    );
+
+    window.addEventListener(
+      "blur",
+      clearInput
+    );
+
+    document.addEventListener(
+      "visibilitychange",
+      () => {
+
+        if (
+          document.hidden
+        ) {
+          clearInput();
+        }
+      }
+    );
+
+    const initialHighScoreEl =
+      document.getElementById(
+        "menu-highscore"
+      );
+
+    if (
+      initialHighScoreEl
+    ) {
+
+      initialHighScoreEl.textContent =
+        "BEST SCORE: " +
+        Game.highScore;
+    }
+
+    // Úvodní boot loading screen se studiovým logem
+    runLoadingScreen(null, 1600);
+  </script>
+
+</body>
+</html>
