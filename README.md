@@ -1,26 +1,34 @@
-# RabbitHollowKnight
+# RabbitHollow Knight 🐇⚔️
 
-## 🚀 Rychlé spuštění
+Jednostránková pixel-art hra RabbitHollow Knight. Projekt zůstává bez build procesu a externích runtime závislostí.
 
-Tento repozitář aktuálně obsahuje samostatnou webovou stránku `index.html`. Není potřeba instalovat Node.js, npm ani další závislosti.
+## Nasazení na Vercel
 
-1. Stáhni repozitář jako ZIP nebo ho naklonuj:
+1. Importuj GitHub repozitář do Vercelu.
+2. Framework Preset: **Other**.
+3. Root Directory: `./`.
+4. Build Command: prázdný / vypnutý.
+5. Output Directory: `.`.
+6. Install Command: prázdný / vypnutý.
 
-```bash
-git clone https://github.com/patrikdjasnik-eng/RabbitHollowKnight-.git
-cd RabbitHollowKnight-
-```
+Vercel servíruje `index.html` jako statický web. Hlavičky a bezpečnostní pravidla nastavuje `vercel.json`. Po propojení GitHubu Vercel automaticky vytváří deploymenty při dalších commitech.
 
-2. Otevři soubor `index.html dvojklikem v prohlížeči.
+## Lokální spuštění
 
-Pokud chceš stránku spustit přes lokální HTTP server, použij Python:
+Otevři `index.html` v prohlížeči nebo spusť:
 
 ```bash
 python -m http.server 8080
 ```
 
-Potom otevři http://localhost:8080.
+## Architektura
 
-## Poznámka ke stavu
+- Vanilla HTML, CSS a JavaScript.
+- Herní canvas běží v prohlížeči.
+- Uložení postupu používá úložiště prohlížeče (localStorage).
+- Bez serverové databáze, API klíčů, Node runtime nebo build pipeline.
+- Základní bezpečnostní HTTP hlavičky a Content Security Policy.
 
-README zatím popisuje pouze ověřitelný způsob otevření současného HTML souboru. Neuvádí žádné neexistující build příkazy ani funkce, které nejsou doložené obsahem repozitáře.
+## Omezení
+
+Postup není synchronizovaný mezi zařízeními; zůstává v konkrétním prohlížeči. CSP povoluje inline skripty a styly, protože současná aplikace je single-file HTML. Při budoucím rozdělení assetů lze pravidla dále zpřísnit.
